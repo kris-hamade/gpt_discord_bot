@@ -1,40 +1,36 @@
-const {
-    Configuration,
-    OpenAIApi
-} = require("openai");
-
-const {
-    getPersonaText
-} = require('./personas');
+const { Configuration, OpenAIApi} = require("openai");
 
 const configuration = new Configuration({
     apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
 
-async function generateResponse(prompt, persona = 'neutral') {
-    const personaText = getPersonaText(persona);
-    const fullPrompt = `${personaText}\n${prompt}`;
+async function generateResponse(prompt, persona) {
+
+    console.log("Generating response for prompt:", prompt); // Log the prompt
+    console.log("Using persona:", persona); // Log the persona
 
     try {
-        const response = await openai.Completion.create({
-            engine: 'gpt-4',
-            prompt: fullPrompt,
-            max_tokens: 100,
-            n: 1,
-            stop: null,
-            temperature: 0.8,
+        const response = await openai.createChatCompletion({
+            model: "gpt-3.5-turbo", // gpt-3.5-turbo is latest ChatGPT API
+            temperature: 1, // Stay 0-1, don't go above 1. 1 works good.
+            messages: [{
+                role: "system",
+                content: persona + ": " + prompt
+            }]
         });
 
-        return response.choices[0].text.trim();
+        const message = response.data.choices[0].message.content;
+        
+        console.log("Generated message:", message); // Log the generated message for debugging
+
+        return message;
     } catch (error) {
-        if (error.response) {
-            console.log(error.response.status);
-            console.log(error.response.data);
-        } else {
-            console.log(error.message);
-        }
+        console.error("Error generating response:", error); // Log the error for debugging
+        return ""; // Return an empty string if an error occurs
     }
 }
 
-module.exports = { generateResponse };
+module.exports = {
+    generateResponse
+};
