@@ -32,7 +32,7 @@ async function preprocessUserInput(input) {
   // Stop words section
   // Read in the file containing stop words
   // The file is expected to have one stop word per line
-  const stopWordsFile = '.\\src\\utils\\data-misc\\stop-words.txt';
+  const stopWordsFile = path.join('.', 'src', 'utils', 'data-misc', 'stop-words.txt');
   const stopWords = fs.readFileSync(stopWordsFile, 'utf8').trim().split(/\s+/);
 
   function preprocess(userInput) {

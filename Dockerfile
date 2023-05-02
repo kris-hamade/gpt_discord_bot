@@ -14,5 +14,8 @@ RUN npm install
 # Bundle app source
 COPY . .
 
+# Copy .env file
+COPY .env ./
+
 CMD ["node", "server.js"]
 EXPOSE 2222
