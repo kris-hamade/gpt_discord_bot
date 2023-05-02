@@ -5,6 +5,9 @@ const {
 const {
     generateResponse
 } = require('../openai/gpt4');
+const {
+    preprocessUserInput
+} = require('../utils/preprocessor');
 
 const client = new Discord.Client({
     intents: [Discord.GatewayIntentBits.Guilds, Discord.GatewayIntentBits.GuildMessages, Discord.GatewayIntentBits.MessageContent],
@@ -34,7 +37,7 @@ async function handleMessage(message) {
 
     // Show as typing in the discord channel
     message.channel.sendTyping();
-    
+
     // command to change persona if the message starts with /persona
     if (message.content.startsWith(cmdPersona)) {
 
@@ -69,6 +72,12 @@ async function handleMessage(message) {
         message.reply("-- Memory Erased --"); // tell user memory was erased
         return;
     }
+
+    // Preprocess Message and Return Data from our DnD Journal / Sessions
+    if (message.content !== "") {
+        dndData = await preprocessUserInput(message.content)
+    }
+
     // interaction with ChatGPT API starts here.
     try {
         // Add the latest user message to the chat history and prepend From (discordusernickname): to help it identify users.
@@ -78,7 +87,7 @@ async function handleMessage(message) {
         });
 
         // generate response from ChatGPT API
-        let responseText = await generateResponse(message.content, personalities[currentPersonality]);
+        let responseText = await generateResponse(message.content, personalities[currentPersonality], dndData);
 
         // trim persona name from response text if it exists.
         responseText = responseText.replace(new RegExp(`${currentPersonality}: |\\(${currentPersonality}\\) `, 'gi'), "");

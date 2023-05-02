@@ -1,14 +1,18 @@
-const { Configuration, OpenAIApi} = require("openai");
+const {
+    Configuration,
+    OpenAIApi
+} = require("openai");
 
 const configuration = new Configuration({
     apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
 
-async function generateResponse(prompt, persona) {
+async function generateResponse(prompt, persona, dndData) {
 
     console.log("Generating response for prompt:", prompt); // Log the prompt
     console.log("Using persona:", persona); // Log the persona
+    console.log("Using D&D Data:", dndData); // Log the D&D Data (if any)
 
     try {
         const response = await openai.createChatCompletion({
@@ -16,12 +20,12 @@ async function generateResponse(prompt, persona) {
             temperature: 1, // Stay 0-1, don't go above 1. 1 works good.
             messages: [{
                 role: "system",
-                content: persona + ": " + prompt
+                content: persona + ": " + prompt + "\n" + dndData
             }]
         });
 
         const message = response.data.choices[0].message.content;
-        
+
         console.log("Generated message:", message); // Log the generated message for debugging
 
         return message;
