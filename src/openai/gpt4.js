@@ -1,3 +1,4 @@
+const fs = require('fs');
 const {
     Configuration,
     OpenAIApi
@@ -7,6 +8,8 @@ const configuration = new Configuration({
     apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
+
+const haggleStatsFilePath = '.\\src\\utils\\data-misc\\haggle-stats.json'
 
 async function generateResponse(prompt, persona, dndData) {
 
@@ -31,7 +34,17 @@ async function generateResponse(prompt, persona, dndData) {
         return message;
     } catch (error) {
         console.error("Error generating response:", error); // Log the error for debugging
-        return ""; // Return an empty string if an error occurs
+
+        let haggleStats = JSON.parse(fs.readFileSync(`${haggleStatsFilePath}`, 'utf8'));
+
+        // Update Haggles Death Stats
+        haggleStats.haggleDeaths += 1;
+        haggleStats.moneySpent += 10;
+
+        // Write the updated data back to the file
+        fs.writeFileSync(`${haggleStatsFilePath}`, JSON.stringify(haggleStats, null, 2));
+        const errorMessage = `ARGGGGHHGHGHGHGGG WEEEEEEEHEHEH I CAN'T RECALL THAT MUCH FROM OUR ADVENTURES!!!! ARGGHEHEHEEEEE! NOOOOT AGAIN!!!! **HAGGLE EXPLODES AND DISINTEGRATES**. \`\`\`Valon throws more money on the ground and summons Haggle again.\`\`\` Woah, sorry about that. I have died soo many times, it's horribly painful each time.... hmm I think I've died **${haggleStats.haggleDeaths} times!** Master Valon is so mad he's had to spend **${haggleStats.moneySpent} GOLD** to get me back. But anyways, I can't remember that much. Try being a little more specific when asking about our travels. `;
+        return errorMessage; // Return an empty string if an error occurs
     }
 }
 
