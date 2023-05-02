@@ -1,0 +1,8 @@
+version: "3"
+services:
+  web:
+    image: haggle_bot
+    container_name: Haggle_Bot
+    restart: unless-stopped
+    ports:
+      - "2222:8180"
