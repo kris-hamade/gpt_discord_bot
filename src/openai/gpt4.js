@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 const {
     Configuration,
     OpenAIApi
@@ -9,7 +10,7 @@ const configuration = new Configuration({
 });
 const openai = new OpenAIApi(configuration);
 
-const haggleStatsFilePath = '.\\src\\utils\\data-misc\\haggle-stats.json'
+const haggleStatsFilePath = path.join('.', 'src', 'utils', 'data-misc', 'haggle-stats.json');
 
 async function generateResponse(prompt, persona, dndData) {
 
