@@ -1,10 +1,10 @@
 const Discord = require('discord.js');
 const {
     personas
-} = require('../openai/personas');
+} = require('../utils/data-misc/personas');
 const {
     generateResponse
-} = require('../openai/gpt4');
+} = require('../openai/gpt3_5');
 const {
     preprocessUserInput
 } = require('../utils/preprocessor');

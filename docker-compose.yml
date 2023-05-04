@@ -6,3 +6,7 @@ services:
     restart: unless-stopped
     ports:
       - "2222:8180"
+    volumes:
+      - type: bind
+        source: D:\Development\haggle_bot_files
+        target: /src/utils
