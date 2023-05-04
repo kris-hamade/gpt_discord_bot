@@ -9,7 +9,7 @@ variables:
 package:
   stage: package
   script:
-    - tar -czvf data-misc.tar.gz /src/utils/data-misc
+    - tar -czvf data-misc.tar.gz ./src/utils/data-misc
   artifacts:
     paths:
       - data-misc.tar.gz
