@@ -22,4 +22,8 @@ deploy:
   before_script:
     - apk add --no-cache curl
   script:
-    - docker run -d -p 2222:8180 --name haggle_bot -v $CI_PROJECT_DIR/data-misc:/src/utils/data-misc $IMAGE_NAME
+    - docker run -d -p 2222:8180 --name haggle_bot \
+      -e DISCORD_TOKEN=$DISCORD_TOKEN \
+      -e OPENAI_API_KEY=$OPENAI_API_KEY \
+      -e SENTRY_DSN=$SENTRY_DSN \
+      -v $CI_PROJECT_DIR/data-misc:/src/utils/data-misc $IMAGE_NAME
