@@ -11,9 +11,10 @@ const lexicon = new natural.Lexicon('EN', 'N', 'NNP');
 const rules = new natural.RuleSet('EN');
 const tagger = new BrillPOSTagger(lexicon, rules);
 
+// Define an array of noun tags
+const nounTags = ['N', 'NN', 'NNS', 'NNP', 'NNPS'];
+
 async function preprocessUserInput(input) {
-
-
   // Read files from the 'data' folder <JSON Files
   const dataFolder = path.join(__dirname, 'data-json');
   const fileNames = fs.readdirSync(dataFolder);
@@ -48,7 +49,7 @@ async function preprocessUserInput(input) {
 
     // Filter out non-nouns
     const nounTokens = taggedTokens
-      .filter(token => token.tag === 'N' || token.tag === 'NN' || token.tag === 'NNS' || token.tag === 'NNP' || token.tag === 'NNPS')
+      .filter(token => nounTags.includes(token.tag))
       .map(token => token.token);
 
 
@@ -58,9 +59,12 @@ async function preprocessUserInput(input) {
     return filteredTokens;
   }
 
-  //JSON File Parser
+  // JSON File Parser
   function search_data(tokens, data) {
     let relevantDocs = [];
+
+    // For Setting Max Number of Characters
+    let maxChars = 14000;
 
     // Iterate over each object in the array
     _.forEach(data, (fileContent) => {
@@ -70,13 +74,37 @@ async function preprocessUserInput(input) {
         tokens.forEach(token => {
           // Check if the token appears in either the Name or Bio fields
           if (doc.Name.toLowerCase().includes(token) || doc.Bio.toLowerCase().includes(token)) {
-            relevantDocs.push(doc);
+            // Count the number of times the token appears in the document
+            const count = (doc.Bio.toLowerCase().match(new RegExp(token, 'g')) || []).length;
+
+            // Add the document and count to the relevantDocs array
+            relevantDocs.push({
+              doc,
+              count
+            });
           }
         });
       });
     });
-    relevantDocs = JSON.stringify(relevantDocs)
-    return relevantDocs;
+
+    // Sort the relevantDocs array in descending order of count
+    relevantDocs.sort((a, b) => b.count - a.count);
+
+    // Filter results based on total characters
+    let totalCharacters = 0;
+    let filteredRelevantDocs = [];
+
+    for (let doc of relevantDocs) {
+      let docLength = JSON.stringify(doc).length;
+      if (totalCharacters + docLength <= maxChars) {
+        totalCharacters += docLength;
+        filteredRelevantDocs.push(doc);
+      } else {
+        break;
+      }
+    }
+
+    return JSON.stringify(filteredRelevantDocs);
   }
 
   const userInput = input;
