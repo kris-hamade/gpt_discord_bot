@@ -64,7 +64,7 @@ async function preprocessUserInput(input) {
     let relevantDocs = [];
 
     // For Setting Max Number of Characters
-    let maxChars = 14000;
+    let maxChars = 30000;
 
     // Iterate over each object in the array
     _.forEach(data, (fileContent) => {
