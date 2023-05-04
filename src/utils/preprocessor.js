@@ -1,9 +1,8 @@
 const _ = require('lodash');
 const fs = require('fs');
 const path = require('path');
-
-// This Section is for the POS Tagger
 const natural = require('natural');
+const stemmer = natural.PorterStemmer;
 const {
   BrillPOSTagger
 } = natural;
@@ -11,73 +10,79 @@ const lexicon = new natural.Lexicon('EN', 'N', 'NNP');
 const rules = new natural.RuleSet('EN');
 const tagger = new BrillPOSTagger(lexicon, rules);
 
-// Define an array of noun tags
 const nounTags = ['N', 'NN', 'NNS', 'NNP', 'NNPS'];
 
+const namesFolder = path.join(__dirname, 'data-json');
+const namesFileNames = fs.readdirSync(namesFolder);
+
+const namesFilePattern = /^\d{8}-JournalExport\.json$/;
+const namesFileName = namesFileNames.find(name => namesFilePattern.test(name));
+
+if (!namesFileName) {
+  throw new Error('No names file found');
+}
+
+const namesFile = path.join(namesFolder, namesFileName);
+const namesData = JSON.parse(fs.readFileSync(namesFile, 'utf-8'));
+
+const customNouns = namesData.flatMap(({
+  Name
+}) => Name.split(' '));
+
+function isCustomNoun(token) {
+  return customNouns.some(customNoun => customNoun.toLowerCase() === token.toLowerCase());
+}
+
 async function preprocessUserInput(input) {
-  // Read files from the 'data' folder <JSON Files
   const dataFolder = path.join(__dirname, 'data-json');
   const fileNames = fs.readdirSync(dataFolder);
   const data = {};
 
   fileNames.forEach(file => {
     const filePath = path.join(dataFolder, file);
-    // read the file and parse the JSON
     const content = fs.readFileSync(filePath, 'utf-8');
     data[file] = JSON.parse(content);
   });
 
-  // Tokenizer
   const tokenizer = new natural.WordTokenizer();
 
-  // Stop words section
-  // Read in the file containing stop words
-  // The file is expected to have one stop word per line
   const stopWordsFile = path.join('.', 'src', 'utils', 'data-misc', 'stop-words.txt');
   const stopWords = fs.readFileSync(stopWordsFile, 'utf8').trim().split(/\s+/);
 
   function preprocess(userInput) {
-    // Tokenize the user input
     let tokens = tokenizer.tokenize(userInput);
 
-    // Convert to lower case
     tokens = tokens.map(token => token.toLowerCase());
 
-    // POS tagging
-    const taggedTokens = tagger.tag(tokens).taggedWords;
-    console.log(taggedTokens); // Add this line to debug
+    tokens = tokens.filter(token => !stopWords.includes(token));
 
-    // Filter out non-nouns
+    const taggedTokens = tagger.tag(tokens).taggedWords;
+
     const nounTokens = taggedTokens
-      .filter(token => nounTags.includes(token.tag))
+      .filter(token => nounTags.includes(token.tag) || isCustomNoun(token.token))
       .map(token => token.token);
 
-
-    // Remove stop words
-    const filteredTokens = nounTokens.filter(token => !stopWords.includes(token));
-
-    return filteredTokens;
+    return nounTokens;
   }
 
-  // JSON File Parser
   function search_data(tokens, data) {
     let relevantDocs = [];
+    let maxChars = 30000;
 
-    // For Setting Max Number of Characters
-    let maxChars = 14000;
+    // Stem the tokens
+    let stemmedTokens = tokens.map(token => stemmer.stem(token.toLowerCase()));
 
-    // Iterate over each object in the array
     _.forEach(data, (fileContent) => {
-      // Iterate over each object in the file's content
       fileContent.forEach(doc => {
-        // Iterate over each token
-        tokens.forEach(token => {
-          // Check if the token appears in either the Name or Bio fields
-          if (doc.Name.toLowerCase().includes(token) || doc.Bio.toLowerCase().includes(token)) {
-            // Count the number of times the token appears in the document
-            const count = (doc.Bio.toLowerCase().match(new RegExp(token, 'g')) || []).length;
 
-            // Add the document and count to the relevantDocs array
+        // Stem the words in the Name and Bio fields
+        let stemmedName = doc.Name.split(' ').map(word => stemmer.stem(word.toLowerCase())).join(' ');
+        let stemmedBio = doc.Bio.split(' ').map(word => stemmer.stem(word.toLowerCase())).join(' ');
+
+        stemmedTokens.forEach(stemmedToken => {
+          if (stemmedName.includes(stemmedToken) || stemmedBio.includes(stemmedToken)) {
+            const count = (stemmedBio.match(new RegExp(stemmedToken, 'g')) || []).length;
+
             relevantDocs.push({
               doc,
               count
@@ -87,10 +92,8 @@ async function preprocessUserInput(input) {
       });
     });
 
-    // Sort the relevantDocs array in descending order of count
     relevantDocs.sort((a, b) => b.count - a.count);
 
-    // Filter results based on total characters
     let totalCharacters = 0;
     let filteredRelevantDocs = [];
 
@@ -107,16 +110,15 @@ async function preprocessUserInput(input) {
     return JSON.stringify(filteredRelevantDocs);
   }
 
+
   const userInput = input;
   const tokens = preprocess(userInput);
   const relevantDocs = search_data(tokens, data);
 
-  //console.log(data)
   console.log(relevantDocs);
-  console.log(tokens)
+  console.log("these are the tokens" + tokens);
 
   return relevantDocs;
-
 }
 
 module.exports = {
