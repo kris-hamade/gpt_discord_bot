@@ -1,12 +1,13 @@
-version: "3"
+version: '3.3'
 services:
-  web:
-    image: haggle_bot
-    container_name: Haggle_Bot
-    restart: unless-stopped
-    ports:
-      - "2222:8180"
-    volumes:
-      - type: bind
-        source: D:\Development\haggle_bot_files
-        target: /src/utils
+    $IMAGE_NAME:
+        ports:
+            - '2222:8180'
+        container_name: haggle_bot
+        environment:
+            - DISCORD_TOKEN=${DISCORD_TOKEN}
+            - OPENAI_API_KEY=${OPENAI_API_KEY}
+            - SENTRY_DSN=${SENTRY_DSN}
+        volumes:
+            - '/home/khamade/config/hagglebot/data-misc:/src/utils/data-misc'
+        image: $IMAGE_NAME
