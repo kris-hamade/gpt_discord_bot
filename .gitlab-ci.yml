@@ -1,28 +1,18 @@
 stages:
-  - package
   - build
   - deploy
 
 variables:
   IMAGE_NAME: registry.gitlab.com/krishamade/gpt_discord_bot:latest
 
-package:
-  stage: package
-  script:
-    - tar -czvf data-misc.tar.gz ./src/utils/data-misc
-  artifacts:
-    paths:
-      - data-misc.tar.gz
-
 build:
   stage: build
-  image: docker/compose:1.29.2
+  image: docker:20.10
+  services:
+    - docker:20.10-dind
   script:
-    - docker-compose build
-    - docker tag haggle_bot $IMAGE_NAME
-  artifacts:
-    paths:
-      - /var/run/docker.sock
+    - docker build -t $IMAGE_NAME .
+    - docker push $IMAGE_NAME
 
 deploy:
   stage: deploy
@@ -32,6 +22,4 @@ deploy:
   before_script:
     - apk add --no-cache curl
   script:
-    - curl -o data-misc.tar.gz $CI_PIPELINE_ID/artifacts/data-misc.tar.gz
-    - tar -xzvf data-misc.tar.gz
     - docker run -d -p 2222:8180 --name <container-name> -v $CI_PROJECT_DIR/data-misc:/src/utils/data-misc $IMAGE_NAME
