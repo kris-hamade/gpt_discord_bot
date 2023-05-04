@@ -4,6 +4,7 @@ const path = require('path');
 
 // This Section is for the POS Tagger
 const natural = require('natural');
+const stemmer = natural.PorterStemmer;
 const {
   BrillPOSTagger
 } = natural;
@@ -60,24 +61,25 @@ async function preprocessUserInput(input) {
   }
 
   // JSON File Parser
+
   function search_data(tokens, data) {
     let relevantDocs = [];
-
-    // For Setting Max Number of Characters
     let maxChars = 14000;
 
-    // Iterate over each object in the array
-    _.forEach(data, (fileContent) => {
-      // Iterate over each object in the file's content
-      fileContent.forEach(doc => {
-        // Iterate over each token
-        tokens.forEach(token => {
-          // Check if the token appears in either the Name or Bio fields
-          if (doc.Name.toLowerCase().includes(token) || doc.Bio.toLowerCase().includes(token)) {
-            // Count the number of times the token appears in the document
-            const count = (doc.Bio.toLowerCase().match(new RegExp(token, 'g')) || []).length;
+    // Stem the tokens
+    let stemmedTokens = tokens.map(token => stemmer.stem(token.toLowerCase()));
 
-            // Add the document and count to the relevantDocs array
+    _.forEach(data, (fileContent) => {
+      fileContent.forEach(doc => {
+
+        // Stem the words in the Name and Bio fields
+        let stemmedName = doc.Name.split(' ').map(word => stemmer.stem(word.toLowerCase())).join(' ');
+        let stemmedBio = doc.Bio.split(' ').map(word => stemmer.stem(word.toLowerCase())).join(' ');
+
+        stemmedTokens.forEach(stemmedToken => {
+          if (stemmedName.includes(stemmedToken) || stemmedBio.includes(stemmedToken)) {
+            const count = (stemmedBio.match(new RegExp(stemmedToken, 'g')) || []).length;
+
             relevantDocs.push({
               doc,
               count
@@ -87,10 +89,8 @@ async function preprocessUserInput(input) {
       });
     });
 
-    // Sort the relevantDocs array in descending order of count
     relevantDocs.sort((a, b) => b.count - a.count);
 
-    // Filter results based on total characters
     let totalCharacters = 0;
     let filteredRelevantDocs = [];
 
@@ -106,7 +106,6 @@ async function preprocessUserInput(input) {
 
     return JSON.stringify(filteredRelevantDocs);
   }
-
   const userInput = input;
   const tokens = preprocess(userInput);
   const relevantDocs = search_data(tokens, data);
