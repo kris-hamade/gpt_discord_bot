@@ -9,10 +9,10 @@ variables:
 package:
   stage: package
   script:
-    - tar -czvf haggle_bot_files.tar.gz $CI_PROJECT_DIR/haggle_bot_files
+    - tar -czvf data-misc.tar.gz /src/utils/data-misc
   artifacts:
     paths:
-      - haggle_bot_files.tar.gz
+      - data-misc.tar.gz
 
 build:
   stage: build
@@ -32,6 +32,6 @@ deploy:
   before_script:
     - apk add --no-cache curl
   script:
-    - curl -o haggle_bot_files.tar.gz $CI_PIPELINE_ID/artifacts/haggle_bot_files.tar.gz
-    - tar -xzvf haggle_bot_files.tar.gz
-    - docker run -d -p 2222:8180 --name <container-name> -v $CI_PROJECT_DIR/haggle_bot_files:/src/utils $IMAGE_NAME
+    - curl -o data-misc.tar.gz $CI_PIPELINE_ID/artifacts/data-misc.tar.gz
+    - tar -xzvf data-misc.tar.gz
+    - docker run -d -p 2222:8180 --name <container-name> -v $CI_PROJECT_DIR/data-misc:/src/utils/data-misc $IMAGE_NAME
