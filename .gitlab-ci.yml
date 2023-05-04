@@ -4,7 +4,7 @@ stages:
   - deploy
 
 variables:
-  IMAGE_NAME: registry.gitlab.com/<username>/<repo-name>:latest
+  IMAGE_NAME: registry.gitlab.com/krishamade/gpt_discord_bot:latest
 
 package:
   stage: package
