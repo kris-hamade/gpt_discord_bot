@@ -8,20 +8,22 @@ const {
 const {
     preprocessUserInput
 } = require('../utils/preprocessor');
+const {
+    buildHistory,
+    clearHistory
+} = require('./historyLog');
 
+// Create a new Discord client
 const client = new Discord.Client({
     intents: [Discord.GatewayIntentBits.Guilds, Discord.GatewayIntentBits.GuildMessages, Discord.GatewayIntentBits.MessageContent],
 });
 
 // required persona vars 
 let currentPersonality = "haggle";
-const chatHistory = [];
-const maxHistory = 4
 const personalities = {
     "haggle": personas.haggle,
     "assistant": personas.assistant
 };
-
 
 async function handleMessage(message) {
     // Ignore messages from other bots
@@ -49,7 +51,6 @@ async function handleMessage(message) {
             // Check persona to see if it's a valid key in 'personalities'.
             if (Object.keys(personalities).includes(personalityName)) {
                 currentPersonality = personalityName;
-                chatHistory.length = 0;
                 message.reply(`Switched to persona ${personalityName}.`);
 
             } else {
@@ -64,12 +65,14 @@ async function handleMessage(message) {
 
     // command to clear chat history
     if (message.content.includes(cmdForget)) {
-        chatHistory.length = 0; // Purge the chat history
-        chatHistory.push({
-            role: "assistant",
-            content: "I will stay in character from now on."
-        });
-        message.reply("-- Memory Erased --"); // tell user memory was erased
+        clearHistory()
+            .then(() => {
+                message.reply("-- Memory Erased --"); // tell user memory was erased
+            })
+            .catch((err) => {
+                message.reply("Unable to erase memory");
+            });
+
         return;
     }
 
@@ -80,32 +83,22 @@ async function handleMessage(message) {
 
     // interaction with ChatGPT API starts here.
     try {
-        // Add the latest user message to the chat history and prepend From (discordusernickname): to help it identify users.
-        chatHistory.push({
-            role: "user",
-            content: `From ${nickname}: ${message.content}`
-        });
 
         // generate response from ChatGPT API
-        let responseText = await generateResponse(message.content, personalities[currentPersonality], dndData);
+        let responseText = await generateResponse(message.content, personalities[currentPersonality], dndData, nickname);
 
         // trim persona name from response text if it exists.
         responseText = responseText.replace(new RegExp(`${currentPersonality}: |\\(${currentPersonality}\\) `, 'gi'), "");
 
-        //store trimmed responses in an assistant role for ChatGPT recollection.
-        chatHistory.push({
-            role: "assistant",
-            content: responseText
-        });
+        //Chat History Use and Manipulation
+        // Add the latest user message to the chat history
+        buildHistory("user", nickname, message.content)
 
-        // Only keep the last few messages in the chat history. Trims oldest. 
-        while (chatHistory.length > maxHistory) {
-            chatHistory.shift();
-        }
+        //Add GPT Response to Chat History
+        buildHistory("assistant", currentPersonality, responseText)
 
         // print trimmed response to discord
         return message.reply(responseText);
-
     } catch (err) {
         console.log(err.message);
         return message.reply("Unable to Generate Response");
