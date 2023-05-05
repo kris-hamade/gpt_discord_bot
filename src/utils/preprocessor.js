@@ -2,6 +2,9 @@ const _ = require('lodash');
 const fs = require('fs');
 const path = require('path');
 const natural = require('natural');
+const {
+  characterLimit
+} = require('./data-misc/config.js');
 const stemmer = natural.PorterStemmer;
 const {
   BrillPOSTagger
@@ -67,7 +70,10 @@ async function preprocessUserInput(input) {
 
   function search_data(tokens, data) {
     let relevantDocs = [];
-    let maxChars = 30000;
+
+    // Set the max character count for the response
+    // characterLimit is set in the config.js file
+    let maxChars = characterLimit;
 
     // Stem the tokens
     let stemmedTokens = tokens.map(token => stemmer.stem(token.toLowerCase()));
