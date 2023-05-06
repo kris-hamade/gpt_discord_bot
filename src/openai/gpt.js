@@ -39,7 +39,6 @@ async function generateResponse(prompt, persona, dndData, nickname) {
     console.log("Using History:", chatHistory); // Log the History (if any)
 
     try {
-        console.log("THIS IS THE GPT MODEL: " + getGptModel())
         const response = await openai.createChatCompletion({
             model: getGptModel(),
             messages: [{
