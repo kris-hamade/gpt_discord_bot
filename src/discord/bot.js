@@ -12,6 +12,10 @@ const {
     buildHistory,
     clearHistory
 } = require('./historyLog');
+const {
+    getConfigInformation,
+    setGptModel
+} = require('../utils/data-misc/config');
 
 // Create a new Discord client
 const client = new Discord.Client({
@@ -33,9 +37,12 @@ async function handleMessage(message) {
     const nickname = message.member.nickname || message.author.username;
     message.content = message.content.replace(/<@[!&]?\d+>/g, "").trim();
 
-    // commands
+    // Discord bot commands
     const cmdForget = "/forget"
     const cmdPersona = "/persona"
+    const cmdSetGptModel = "/setgptmodel"
+    const cmdSetGptTemp = "/setgpttemp"
+    const cmdAbout = "/about"
 
     // Show as typing in the discord channel
     message.channel.sendTyping();
@@ -63,6 +70,25 @@ async function handleMessage(message) {
         return;
     }
 
+    // Command to change GPT model
+    if (message.content.startsWith(cmdSetGptModel)) {
+        const args = message.content.split(" ");
+        if (args.length > 1) {
+            const newModel = args[1].toLowerCase();
+            const result = setGptModel(newModel);
+            message.reply(result.message);
+        } else {
+            message.reply(`Usage: ${cmdSetGptModel} <model>`);
+        }
+        return;
+    }
+
+    // Command to get configuration information about the bot. Version, GPT model, etc.
+    if (message.content.startsWith(cmdAbout)) {
+        const configInfo = getConfigInformation();
+        message.reply(configInfo);
+        return;
+    }
     // command to clear chat history
     if (message.content.includes(cmdForget)) {
         clearHistory()
@@ -77,8 +103,9 @@ async function handleMessage(message) {
     }
 
     // Preprocess Message and Return Data from our DnD Journal / Sessions
+    // Also sends user nickname to retrieve data about their character
     if (message.content !== "") {
-        dndData = await preprocessUserInput(message.content)
+        dndData = await preprocessUserInput(message.content, nickname)
     }
 
     // interaction with ChatGPT API starts here.
