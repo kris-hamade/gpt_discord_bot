@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const natural = require('natural');
 const {
-  characterLimit
+  getCharacterLimit
 } = require('./data-misc/config.js');
 const stemmer = natural.PorterStemmer;
 const {
@@ -36,7 +36,7 @@ function isCustomNoun(token) {
   return customNouns.some(customNoun => customNoun.toLowerCase() === token.toLowerCase());
 }
 
-async function preprocessUserInput(input) {
+async function preprocessUserInput(input, nickname) {
   const dataFolder = path.join(__dirname, 'data-json');
   const fileNames = fs.readdirSync(dataFolder);
   const data = {};
@@ -52,19 +52,25 @@ async function preprocessUserInput(input) {
   const stopWordsFile = path.join('.', 'src', 'utils', 'data-misc', 'stop-words.txt');
   const stopWords = fs.readFileSync(stopWordsFile, 'utf8').trim().split(/\s+/);
 
-  function preprocess(userInput) {
+  function preprocess(userInput, nickname) {
     let tokens = tokenizer.tokenize(userInput);
 
-    tokens = tokens.map(token => token.toLowerCase());
+    // Append the nickname to the list of tokens
+    if (nickname) {
+      tokens.push(nickname);
+    }
 
+    tokens = tokens.map(token => token.toLowerCase());
     tokens = tokens.filter(token => !stopWords.includes(token));
 
     const taggedTokens = tagger.tag(tokens).taggedWords;
 
+    console.log("Tagged tokens: ", taggedTokens);
+
     const nounTokens = taggedTokens
       .filter(token => nounTags.includes(token.tag) || isCustomNoun(token.token))
       .map(token => token.token);
-
+    console.log("Noun tokens: ", nounTokens);
     return nounTokens;
   }
 
@@ -73,7 +79,7 @@ async function preprocessUserInput(input) {
 
     // Set the max character count for the response
     // characterLimit is set in the config.js file
-    let maxChars = characterLimit;
+    let maxChars = getCharacterLimit();
 
     // Stem the tokens
     let stemmedTokens = tokens.map(token => stemmer.stem(token.toLowerCase()));
@@ -118,11 +124,10 @@ async function preprocessUserInput(input) {
 
 
   const userInput = input;
-  const tokens = preprocess(userInput);
+  const tokens = preprocess(userInput, nickname);
   const relevantDocs = search_data(tokens, data);
 
   console.log(relevantDocs);
-  console.log("these are the tokens" + tokens);
 
   return relevantDocs;
 }
