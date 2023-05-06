@@ -1,7 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 const {
-    characterLimit
+    getCharacterLimit,
+    getGptModel,
+    gptTemperature
   } = require('../utils/data-misc/config.js');
 const {
     Configuration,
@@ -20,7 +22,7 @@ const haggleStatsFilePath = path.join('.', 'src', 'utils', 'data-misc', 'haggle-
 
 // Set the max prompt size * 4 is about to calculate token size
 // characterLimit is set in the config.js file
-const maxPromptSize = characterLimit;
+const maxPromptSize = getCharacterLimit();
 
 async function generateResponse(prompt, persona, dndData, nickname) {
     // Read in the file containing the haggle stats
@@ -38,7 +40,7 @@ async function generateResponse(prompt, persona, dndData, nickname) {
 
     try {
         const response = await openai.createChatCompletion({
-            model: "gpt-4",
+            model: getGptModel(),
             messages: [{
                     role: "system",
                     content: persona
@@ -59,7 +61,8 @@ async function generateResponse(prompt, persona, dndData, nickname) {
                     role: "user",
                     content: `${nickname} says: ${prompt}`
                 }
-            ]
+            ],
+            //temperature: gptTemperature
         });
 
         const message = response.data.choices[0].message.content;
