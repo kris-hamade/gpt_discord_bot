@@ -9,7 +9,7 @@ const {
 } = require("openai");
 const {
     getHistory
-} = require('../discord/historyLog');
+} = require('../discord/historyLog.js');
 
 const configuration = new Configuration({
     apiKey: process.env.OPENAI_API_KEY,
@@ -38,7 +38,7 @@ async function generateResponse(prompt, persona, dndData, nickname) {
 
     try {
         const response = await openai.createChatCompletion({
-            model: "gpt-3.5-turbo",
+            model: "gpt-4",
             messages: [{
                     role: "system",
                     content: persona

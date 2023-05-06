@@ -4,7 +4,7 @@ const {
 } = require('../utils/data-misc/personas');
 const {
     generateResponse
-} = require('../openai/gpt3_5');
+} = require('../openai/gpt');
 const {
     preprocessUserInput
 } = require('../utils/preprocessor');
