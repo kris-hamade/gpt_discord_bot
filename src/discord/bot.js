@@ -14,7 +14,9 @@ const {
 } = require('./historyLog');
 const {
     getConfigInformation,
-    setGptModel
+    getUptime,
+    setGptModel,
+    setGptTemperature
 } = require('../utils/data-misc/config');
 
 // Create a new Discord client
@@ -40,8 +42,9 @@ async function handleMessage(message) {
     // Discord bot commands
     const cmdForget = "/forget"
     const cmdPersona = "/persona"
-    const cmdSetGptModel = "/setgptmodel"
-    const cmdSetGptTemp = "/setgpttemp"
+    const cmdSetGptModel = "/model"
+    const cmdSetGptTemp = "/temp"
+    const cmdGetUptime = "/uptime"
     const cmdAbout = "/about"
 
     // Show as typing in the discord channel
@@ -80,6 +83,26 @@ async function handleMessage(message) {
         } else {
             message.reply(`Usage: ${cmdSetGptModel} <model>`);
         }
+        return;
+    }
+
+    // Command to change GPT temperature
+    if (message.content.startsWith(cmdSetGptTemp)) {
+        const args = message.content.split(" ");
+        if (args.length > 1) {
+            const newTemp = args[1].toLowerCase();
+            const result = setGptTemperature(newTemp);
+            message.reply(result.message);
+        } else {
+            message.reply(`Usage: ${cmdSetGptTemp} <temp>`);
+        }
+        return;
+    }
+
+    // Command to get uptime of the bot
+    if (message.content.startsWith(cmdGetUptime)) {
+        const uptime = getUptime();
+        message.reply(`Uptime: ${uptime}`);
         return;
     }
 

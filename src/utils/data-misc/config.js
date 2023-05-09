@@ -1,4 +1,6 @@
 // Configurations for chat_gpt_bot
+// Instantiate moment.js for timestamping
+const moment = require('moment');
 // Sets the version of the bot
 const version = "1.4.0.2";
 // Sets the GPT model
@@ -9,11 +11,15 @@ let gptTemperature = "1";
 // Sets Character limit in gpt.js and preprocessor.js
 let characterLimit = 8000 * 4;
 
-function setGptModel(newModel) {
-    const allowedModels = ["gpt-3.5-turbo", "gpt-4"];
+// Start tracking bot uptime
+const startTime = moment();
 
+function setGptModel(newModel) {
+    const allowedModels = ["gpt-3","gpt-3.5-turbo", "gpt-4"];
     if (allowedModels.includes(newModel)) {
-        gptModel = newModel;
+        // Ternary operator to set gptModel to gpt-3.5-turbo if gpt-3 is selected
+        gptModel = newModel === "gpt-3" ? "gpt-3.5-turbo" : newModel;        
+
         characterLimit = newModel === "gpt-4" ? 8000 * 4 : 4000 * 4;
         return {
             success: true,
@@ -45,11 +51,19 @@ function getGptModel() {
     return gptModel;
 }
 
+function getUptime() {
+    const now = moment();
+    const duration = moment.duration(now.diff(startTime));
+    return duration.humanize();
+}
+
 function getConfigInformation() {
     return `Version: ${version}
   GPT Model: ${gptModel}
   GPT Temperature: ${gptTemperature}
-  Character Limit: ${characterLimit}`;
+  Character Limit: ${characterLimit}
+  Start Time: ${startTime.format('YYYY-MM-DD HH:mm:ss')}
+  Uptime: ${getUptime()}`;
 }
 
 module.exports = {
@@ -57,7 +71,8 @@ module.exports = {
     gptTemperature,
     getCharacterLimit,
     getConfigInformation,
+    getGptModel,
+    getUptime,
     setGptModel,
     setGptTemperature,
-    getGptModel
 };
