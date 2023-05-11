@@ -74,6 +74,11 @@ async function generateResponse(prompt, persona, dndData, nickname) {
 
         const message = response.data.choices[0].message.content;
 
+        // Log the number of tokens used
+        console.log("Prompt tokens used:", response.data.usage.prompt_tokens);
+        console.log("Completion tokens used:", response.data.usage.completion_tokens);
+        console.log("Total tokens used:", response.data.usage.total_tokens);
+
         console.log("Generated message:", message); // Log the generated message for debugging
 
         return message;
