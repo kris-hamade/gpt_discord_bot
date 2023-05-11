@@ -87,4 +87,11 @@ typings/
 # DynamoDB Local files
 .dynamodb/
 
+# Chat history files
 src/utils/data-misc/chathistory.json
+
+# data-upload files
+/src/utils/data-uploads/*
+
+# data-archive files
+/src/utils/data-archive/*
