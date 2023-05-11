@@ -3,8 +3,8 @@ const path = require('path');
 const {
     getCharacterLimit,
     getGptModel,
-    gptTemperature
-  } = require('../utils/data-misc/config.js');
+    getGptTemperature
+} = require('../utils/data-misc/config.js');
 const {
     Configuration,
     OpenAIApi
@@ -12,6 +12,10 @@ const {
 const {
     getHistory
 } = require('../discord/historyLog.js');
+const {
+    max,
+    get
+} = require('lodash');
 
 const configuration = new Configuration({
     apiKey: process.env.OPENAI_API_KEY,
@@ -23,6 +27,9 @@ const haggleStatsFilePath = path.join('.', 'src', 'utils', 'data-misc', 'haggle-
 // Set the max prompt size * 4 is about to calculate token size
 // characterLimit is set in the config.js file
 const maxPromptSize = getCharacterLimit();
+
+// Set the max tokens to 1/4 of the max prompt size
+//const maxTokens = maxPromptSize / 4;
 
 async function generateResponse(prompt, persona, dndData, nickname) {
     // Read in the file containing the haggle stats
@@ -62,7 +69,7 @@ async function generateResponse(prompt, persona, dndData, nickname) {
                     content: `${nickname} says: ${prompt}`
                 }
             ],
-            //temperature: gptTemperature
+            temperature: getGptTemperature(),
         });
 
         const message = response.data.choices[0].message.content;
