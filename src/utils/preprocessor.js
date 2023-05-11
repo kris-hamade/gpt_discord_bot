@@ -3,7 +3,8 @@ const fs = require('fs');
 const path = require('path');
 const natural = require('natural');
 const {
-  getCharacterLimit
+  getCharacterLimit,
+  getGptModel
 } = require('./data-misc/config.js');
 const stemmer = natural.PorterStemmer;
 const {
@@ -79,30 +80,37 @@ async function preprocessUserInput(input, nickname) {
 
     // Set the max character count for the response
     // characterLimit is set in the config.js file
-    let maxChars = getCharacterLimit();
+    const maxChars = getCharacterLimit();
 
+    // Set the minimum number of tokens that must match based on GPT model
+    const minMatchCount = getGptModel() === 'gpt-3' || 'gpt-3.5-turbo' ? 2 : 1;
+    console.log("minMatchCount: ", minMatchCount);
     // Stem the tokens
     let stemmedTokens = tokens.map(token => stemmer.stem(token.toLowerCase()));
 
     _.forEach(data, (fileContent) => {
       fileContent.forEach(doc => {
-
         // Stem the words in the Name and Bio fields
         let stemmedName = doc.Name.split(' ').map(word => stemmer.stem(word.toLowerCase())).join(' ');
         let stemmedBio = doc.Bio.split(' ').map(word => stemmer.stem(word.toLowerCase())).join(' ');
 
+        let matchCount = 0;
         stemmedTokens.forEach(stemmedToken => {
           if (stemmedName.includes(stemmedToken) || stemmedBio.includes(stemmedToken)) {
-            const count = (stemmedBio.match(new RegExp(stemmedToken, 'g')) || []).length;
-
-            relevantDocs.push({
-              doc,
-              count
-            });
+            matchCount++;
           }
         });
+
+        // Only add the doc to relevantDocs if it matches a certain number of tokens
+        if (matchCount >= minMatchCount) {
+          relevantDocs.push({
+            doc,
+            count: matchCount
+          });
+        }
       });
     });
+
 
     relevantDocs.sort((a, b) => b.count - a.count);
 

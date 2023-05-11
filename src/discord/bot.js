@@ -1,7 +1,5 @@
 const Discord = require('discord.js');
-const {
-    personas
-} = require('../utils/data-misc/personas');
+const personas = require('../utils/data-misc/personas.json');
 const {
     generateResponse
 } = require('../openai/gpt');
@@ -26,14 +24,7 @@ const client = new Discord.Client({
 
 // required persona vars 
 let currentPersonality = "haggle";
-const personalities = {
-    "assistant": personas.assistant,
-    "canyea": personas.canyea,
-    "haggle": personas.haggle,
-    "ignis": personas.ignis,
-    "juggernaut": personas.juggernaut,
-    "royal": personas.royal,
-};
+const personalities = personas;
 
 async function handleMessage(message) {
     // Ignore messages from other bots
