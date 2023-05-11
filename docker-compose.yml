@@ -2,9 +2,10 @@ version: '3.3'
 services:
     $IMAGE_NAME:
         ports:
-            - '2222:8180'
+            - '8940:3000'
         container_name: haggle_bot
         environment:
+            - API_KEY=${API_KEY}
             - DISCORD_TOKEN=${DISCORD_TOKEN}
             - OPENAI_API_KEY=${OPENAI_API_KEY}
             - SENTRY_DSN=${SENTRY_DSN}
