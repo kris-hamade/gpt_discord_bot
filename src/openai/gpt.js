@@ -55,7 +55,7 @@ async function generateResponse(prompt, persona, dndData, nickname) {
                 },
                 {
                     role: "system",
-                    content: "Chat History will follow this. It is in JSON format. type: is either the user or assistant. username is who sent it. content is the message. timestamp is when the message was sent " + "--START CHAT HISTORY-- " + chatHistory + " --END CHAT HISTORY--"
+                    content: "--START CHAT HISTORY-- " + chatHistory + " --END CHAT HISTORY--"
                 },
                 {
                     role: "user",
