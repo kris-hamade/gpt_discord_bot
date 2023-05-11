@@ -27,8 +27,12 @@ const client = new Discord.Client({
 // required persona vars 
 let currentPersonality = "haggle";
 const personalities = {
+    "assistant": personas.assistant,
+    "canyea": personas.canyea,
     "haggle": personas.haggle,
-    "assistant": personas.assistant
+    "ignis": personas.ignis,
+    "juggernaut": personas.juggernaut,
+    "royal": personas.royal,
 };
 
 async function handleMessage(message) {
