@@ -8,7 +8,8 @@ const {
 } = require('../utils/preprocessor');
 const {
     buildHistory,
-    clearHistory
+    clearAllHistory,
+    clearUsersHistory
 } = require('./historyLog');
 const {
     getConfigInformation,
@@ -30,12 +31,13 @@ async function handleMessage(message) {
     // Ignore messages from other bots
     if (message.author.bot || !(message.mentions.has(client.user.id))) return;
 
-    // get nickname of membor author and trim dicord user code string from message.
+    // get nickname author and trim dicord user code string from message.
     const nickname = message.member.nickname || message.author.username;
     message.content = message.content.replace(/<@[!&]?\d+>/g, "").trim();
 
     // Discord bot commands
-    const cmdForget = "/forget"
+    const cmdForgetAll = "/forgetall"
+    const cmdForgetMe = "/forgetme"
     const cmdPersona = "/persona"
     const cmdSetGptModel = "/model"
     const cmdSetGptTemp = "/temp"
@@ -107,9 +109,23 @@ async function handleMessage(message) {
         message.reply(configInfo);
         return;
     }
+
     // command to clear chat history
-    if (message.content.includes(cmdForget)) {
-        clearHistory()
+    if (message.content.includes(cmdForgetMe)) {
+        clearUsersHistory(nickname)
+            .then(() => {
+                message.reply(`--Memory of ${nickname} Erased--`); // tell user memory was erased
+            })
+            .catch((err) => {
+                message.reply(`Unable to erase memory of ${nickname}`);
+            });
+
+        return;
+    }
+
+    // command to clear chat history
+    if (message.content.includes(cmdForgetAll)) {
+        clearAllHistory()
             .then(() => {
                 message.reply("-- Memory Erased --"); // tell user memory was erased
             })
@@ -140,7 +156,7 @@ async function handleMessage(message) {
         buildHistory("user", nickname, message.content)
 
         //Add GPT Response to Chat History
-        buildHistory("assistant", currentPersonality, responseText)
+        buildHistory("assistant", currentPersonality, responseText, nickname)
 
         // print trimmed response to discord
         return message.reply(responseText);

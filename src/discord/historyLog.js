@@ -7,13 +7,14 @@ const historyFile = path.join('.', 'src', 'utils', 'data-misc', 'chathistory.jso
 const historyContent = fs.readFileSync(historyFile, 'utf-8');
 let chatHistory = JSON.parse(historyContent);
 
-async function buildHistory(type, username, content) {
+async function buildHistory(type, username, content, requestor) {
   let timestamp = getCurrentTimestamp();
   try {
     chatHistory.push({
       type,
       username,
       content,
+      requestor,
       timestamp
     });
 
@@ -54,15 +55,22 @@ async function getHistoryJson(size) {
   }
 }
 
-async function getHistory(size) {
+async function getHistory(size, nickname) {
   if (size === "complete") {
-    return formatChatHistory(chatHistory);
+    const fullHistory = formatChatHistory(chatHistory);
+    return fullHistory.filter(item => item.username === nickname || item.requestor === nickname);
   } else {
     let remainingSize = size;
     let output = [];
 
     for (let i = chatHistory.length - 1; i >= 0; i--) {
       const item = chatHistory[i];
+
+      // Only consider items related to the requester
+      if (item.username !== nickname && item.requestor !== nickname) {
+        continue;
+      }
+
       const itemJsonString = JSON.stringify(item);
       const itemLength = itemJsonString.length;
 
@@ -75,7 +83,7 @@ async function getHistory(size) {
     }
 
     output.reverse(); // Reverse the output array to maintain the original order
-    return formatChatHistory(output);
+    return formatChatHistory(output.filter(item => item.username === nickname || item.requestor === nickname));
   }
 }
 
@@ -89,8 +97,29 @@ function formatChatHistory(chatHistory) {
   }).join('\n');
 }
 
+async function clearUsersHistory(nickname) {
+  return new Promise((resolve, reject) => {
+    // Filter out the history for the provided nickname
+    chatHistory = chatHistory.filter(item => item.username !== nickname && item.requestor !== nickname);
+    
+    // Convert the remaining chat history to JSON
+    const json = JSON.stringify(chatHistory);
+    
+    // Write the updated chat history to the file
+    fs.writeFile(historyFile, json, 'utf8', (err) => {
+      if (err) {
+        console.error(`Error clearing history for ${nickname} in chathistory.json:`, err);
+        reject(err);
+      } else {
+        console.log(`History for ${nickname} cleared in chathistory.json.`);
+        resolve();
+      }
+    });
+  });
+}
 
-async function clearHistory() {
+
+async function clearAllHistory() {
   return new Promise((resolve, reject) => {
     chatHistory = [];
     fs.writeFile(historyFile, '[]', 'utf8', (err) => {
@@ -111,6 +140,7 @@ function getCurrentTimestamp() {
 
 module.exports = {
   buildHistory,
-  clearHistory,
+  clearAllHistory,
+  clearUsersHistory,
   getHistory
 };
