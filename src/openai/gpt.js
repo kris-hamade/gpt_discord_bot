@@ -31,13 +31,13 @@ const maxPromptSize = getCharacterLimit();
 // Set the max tokens to 1/4 of the max prompt size
 //const maxTokens = maxPromptSize / 4;
 
-async function generateResponse(prompt, persona, dndData, nickname) {
+async function generateResponse(prompt, persona, dndData, nickname, personality) {
     // Read in the file containing the haggle stats
     let haggleStats = JSON.parse(fs.readFileSync(`${haggleStatsFilePath}`, 'utf8'));
 
     haggleStatsPrompt = `You have died **${haggleStats.haggleDeaths} times** and Valon has had to spend **${haggleStats.moneySpent} GOLD** getting him back.`
 
-    const chatHistory = await getSizedHistory(prompt, persona, haggleStatsPrompt, dndData, nickname);
+    const chatHistory = await getSizedHistory(prompt, persona, haggleStatsPrompt, dndData, nickname, personality);
 
     console.log("Generating response for prompt:", prompt); // Log the prompt
     console.log("Using persona:", persona); // Log the persona
@@ -96,7 +96,7 @@ async function generateResponse(prompt, persona, dndData, nickname) {
     }
 }
 
-async function getSizedHistory(prompt, persona, haggleStatsPrompt, dndData, nickname) {
+async function getSizedHistory(prompt, persona, haggleStatsPrompt, dndData, nickname, personality) {
     const promptLength = prompt.length;
     const personaLength = JSON.stringify(persona).length;
     const haggleStatsPromptLength = haggleStatsPrompt.length;
@@ -105,7 +105,7 @@ async function getSizedHistory(prompt, persona, haggleStatsPrompt, dndData, nick
     const totalLength = promptLength + personaLength + haggleStatsPromptLength + dndDataLength;
     const remainingSize = maxPromptSize - totalLength;
 
-    const historyItems = await getHistory(remainingSize, nickname);
+    const historyItems = await getHistory(remainingSize, nickname, personality);
     return historyItems;
 }
 

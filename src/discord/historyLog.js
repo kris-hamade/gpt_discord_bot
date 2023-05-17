@@ -55,10 +55,10 @@ async function getHistoryJson(size) {
   }
 }
 
-async function getHistory(size, nickname) {
+async function getHistory(size, nickname, personality) {
   if (size === "complete") {
     const fullHistory = formatChatHistory(chatHistory);
-    return fullHistory.filter(item => item.username === nickname || item.requestor === nickname);
+    return fullHistory.filter(item => (item.requestor === nickname || item.username === nickname) && (item.type === 'assistant' || item.username === personality));
   } else {
     let remainingSize = size;
     let output = [];
@@ -66,8 +66,8 @@ async function getHistory(size, nickname) {
     for (let i = chatHistory.length - 1; i >= 0; i--) {
       const item = chatHistory[i];
 
-      // Only consider items related to the requester
-      if (item.username !== nickname && item.requestor !== nickname) {
+      // Only consider items related to the requester and personality
+      if ((item.requestor !== nickname && item.username !== nickname) || (item.type === 'assistant' && item.username !== personality)) {
         continue;
       }
 
@@ -83,9 +83,10 @@ async function getHistory(size, nickname) {
     }
 
     output.reverse(); // Reverse the output array to maintain the original order
-    return formatChatHistory(output.filter(item => item.username === nickname || item.requestor === nickname));
+    return formatChatHistory(output.filter(item => (item.requestor === nickname || item.username === nickname) && (item.type === 'assistant' || item.username === personality)));
   }
 }
+
 
 function formatChatHistory(chatHistory) {
   return chatHistory.map(item => {
