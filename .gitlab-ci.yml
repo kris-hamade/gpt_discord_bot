@@ -22,7 +22,7 @@ deploy:
   stage: deploy
   image: docker:20.10
   tags:
-    - deployment
+  - deployment
   services:
   - docker:20.10-dind
   before_script:
@@ -40,7 +40,7 @@ postman_tests:
   stage: test
   image: docker:20.10
   services:
-    - docker:20.10-dind
+  - docker:20.10-dind
   script:
   - docker run -v "$CI_PROJECT_DIR/tests:/etc/newman" -t postman/newman:latest run "/etc/newman/Discord_GPT_Bot_Testing.postman_collection.json" --reporters="cli"
   rules:
