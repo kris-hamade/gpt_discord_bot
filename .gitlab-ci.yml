@@ -36,3 +36,9 @@ deploy:
   - ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker run -d -p 8940:3000 --name haggle_bot -e API_KEY=$API_KEY -e DISCORD_TOKEN=$DISCORD_TOKEN -e OPENAI_API_KEY=$OPENAI_API_KEY -e SENTRY_DSN=$SENTRY_DSN -e GCP_PROJECT_ID=$GCP_PROJECT_ID -e GCP_SERVICE_ACCOUNT_KEY=$GCP_SERVICE_ACCOUNT_KEY -v $CI_PROJECT_DIR/data-misc:/src/utils/data-misc $TAG_COMMIT"
   rules:
   - if: '$CI_COMMIT_REF_NAME == "main"'
+postman_tests:
+  stage: test
+  script:
+  - docker run -v $(pwd)/tests:/etc/newman -t postman/newman:latest run "Discord_GPT_Bot_Testing.postman_collection.json" --reporters="cli"
+  rules:
+  - if: '$CI_COMMIT_REF_NAME == "main"'
