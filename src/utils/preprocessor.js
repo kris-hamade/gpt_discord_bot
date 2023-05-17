@@ -14,7 +14,7 @@ const lexicon = new natural.Lexicon('EN', 'N', 'NNP');
 const rules = new natural.RuleSet('EN');
 const tagger = new BrillPOSTagger(lexicon, rules);
 
-const nounTags = ['N', 'NN', 'NNS', 'NNP', 'NNPS'];
+const relevantTags = getGptModel() === "gpt-3" || "gpt-3.5-turbo" ? ['N', 'NN', 'NNS', 'NNP', 'NNPS'] : ['N', 'NN', 'NNS', 'NNP', 'NNPS', 'JJ', 'JJR', 'JJS'];
 
 const namesFolder = path.join(__dirname, 'data-json');
 const namesFileNames = fs.readdirSync(namesFolder);
@@ -33,7 +33,7 @@ const customNouns = namesData.flatMap(({
   Name
 }) => Name.split(' '));
 
-function isCustomNoun(token) {
+function isCustomToken(token) {
   return customNouns.some(customNoun => customNoun.toLowerCase() === token.toLowerCase());
 }
 
@@ -68,11 +68,11 @@ async function preprocessUserInput(input, nickname) {
 
     console.log("Tagged tokens: ", taggedTokens);
 
-    const nounTokens = taggedTokens
-      .filter(token => nounTags.includes(token.tag) || isCustomNoun(token.token))
+    const relevantTokens = taggedTokens
+      .filter(token => relevantTags.includes(token.tag) || isCustomToken(token.token))
       .map(token => token.token);
-    console.log("Noun tokens: ", nounTokens);
-    return nounTokens;
+    console.log("Noun tokens: ", relevantTokens);
+    return relevantTokens;
   }
 
   function search_data(tokens, data) {
@@ -85,8 +85,10 @@ async function preprocessUserInput(input, nickname) {
     // Set the minimum number of tokens that must match based on GPT model
     const minMatchCount = getGptModel() === 'gpt-3' || 'gpt-3.5-turbo' ? 2 : 1;
     console.log("minMatchCount: ", minMatchCount);
+
     // Stem the tokens
     let stemmedTokens = tokens.map(token => stemmer.stem(token.toLowerCase()));
+    console.log("Stemmed tokens: ", stemmedTokens);
 
     _.forEach(data, (fileContent) => {
       fileContent.forEach(doc => {
