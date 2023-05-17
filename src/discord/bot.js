@@ -20,7 +20,14 @@ const {
 
 // Create a new Discord client
 const client = new Discord.Client({
-    intents: [Discord.GatewayIntentBits.Guilds, Discord.GatewayIntentBits.GuildMessages, Discord.GatewayIntentBits.MessageContent],
+    intents: [
+        Discord.GatewayIntentBits.Guilds,
+        Discord.GatewayIntentBits.GuildMessages,
+        Discord.GatewayIntentBits.MessageContent,
+        Discord.GatewayIntentBits.DirectMessages,
+        Discord.GatewayIntentBits.DirectMessageReactions,
+        Discord.GatewayIntentBits.DirectMessageTyping
+    ],
 });
 
 // required persona vars 
@@ -28,15 +35,26 @@ let currentPersonality = "haggle";
 const personalities = personas;
 
 async function handleMessage(message) {
+    console.log(`Received a message from ${message.author.username} in ${message.channel.type}`);
     // Ignore messages from other bots
-    if (message.author.bot || !(message.mentions.has(client.user.id))) return;
+    if (message.author.bot) return;
+
+    // Skip mention check in DMs
+    if (!(message.channel instanceof Discord.DMChannel) && !(message.mentions.has(client.user.id))) return;
 
     // get nickname author and trim dicord user code string from message.
-    const nickname = message.member.nickname || message.author.username;
+    let nickname = '';
+    if (message.guild) {
+        nickname = message.member.nickname || message.author.username;
+    } else {
+        // This is a DM, so the user doesn't have a nickname
+        nickname = message.author.username;
+    }
+
     message.content = message.content.replace(/<@[!&]?\d+>/g, "").trim();
 
     // Discord bot commands
-    const cmdForgetAll = "/forgetall"
+    const cmdForgetAll = "/forgetall" // Clear all chat history
     const cmdForgetMe = "/forgetme"
     const cmdPersona = "/persona"
     const cmdSetGptModel = "/model"
@@ -110,18 +128,19 @@ async function handleMessage(message) {
         return;
     }
 
-    // command to clear chat history
-    if (message.content.includes(cmdForgetMe)) {
-        clearUsersHistory(nickname)
-            .then(() => {
-                message.reply(`--Memory of ${nickname} Erased--`); // tell user memory was erased
-            })
-            .catch((err) => {
-                message.reply(`Unable to erase memory of ${nickname}`);
-            });
+// command to clear chat history
+if (message.content.includes(cmdForgetMe)) {
+    clearUsersHistory(nickname)
+        .then(() => {
+            message.reply(`--Memory of ${nickname} Erased--`); // tell user memory was erased
+        })
+        .catch((err) => {
+            message.reply(`Unable to erase memory of ${nickname}`);
+        });
 
-        return;
-    }
+    return;
+}
+
 
     // command to clear chat history
     if (message.content.includes(cmdForgetAll)) {
@@ -138,15 +157,17 @@ async function handleMessage(message) {
 
     // Preprocess Message and Return Data from our DnD Journal / Sessions
     // Also sends user nickname to retrieve data about their character
-    if (message.content !== "") {
+    if (message.content !== "" && currentPersonality !== "assistant") {
         dndData = await preprocessUserInput(message.content, nickname)
+    } else {
+        dndData = "No DnD Data Found"
     }
 
     // interaction with ChatGPT API starts here.
     try {
 
         // generate response from ChatGPT API
-        let responseText = await generateResponse(message.content, personalities[currentPersonality], dndData, nickname);
+        let responseText = await generateResponse(message.content, personalities[currentPersonality], dndData, nickname, currentPersonality);
 
         // trim persona name from response text if it exists.
         responseText = responseText.replace(new RegExp(`${currentPersonality}: |\\(${currentPersonality}\\) `, 'gi'), "");
