@@ -29,13 +29,7 @@ deploy:
   before_script:
   - apk add --no-cache curl
   - apk update && apk add openssh-client
-  - eval $(ssh-agent -s)
-  - echo $ID_RSA | base64 -d > id_rsa
-  - echo id_rsa
   - echo $ID_RSA
-  - chmod 600 id_rsa
-  - ssh-add id_rsa
-  - ls -l
   script:
   - chmod og= $ID_RSA
   - apk update && apk add openssh-client
