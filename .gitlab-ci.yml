@@ -129,7 +129,7 @@ load_test_k6_dev:
   script:
     - pwd
     - ls
-    - k6 run $CI_PROJECT_DIR/tests/k6Script.js
+    - k6 run /tests/k6Script.js
   dependencies: 
     - convert_postman_to_k6_dev
   rules:
