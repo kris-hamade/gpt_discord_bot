@@ -104,7 +104,7 @@ convert_postman_to_k6_dev:
   before_script:
     - npm install -g postman-to-k6
   script:
-    - postman-to-k6 /tests/Discord_GPT_Bot_Testing.postman_collection.json -e /tests/DEV.postman_environment.json -o /tests/k6Script.js
+    - postman-to-k6 $CI_PROJECT_DIR/tests/Discord_GPT_Bot_Testing.postman_collection.json -e $CI_PROJECT_DIR/tests/DEV.postman_environment.json -o $CI_PROJECT_DIR/tests/k6Script.js
   artifacts:
     paths:
       - k6Script.js
@@ -133,7 +133,7 @@ load_test_k6_dev:
   script:
     - pwd
     - ls
-    - k6 run /tests/k6Script.js
+    - k6 run $CI_PROJECT_DIR/tests/k6Script.js
   dependencies: 
     - convert_postman_to_k6_dev
   rules:
