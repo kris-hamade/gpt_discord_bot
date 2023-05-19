@@ -1,8 +1,9 @@
----
 stages:
 - publish
 - deploy
-- test
+- postman_tests
+- convert_postman_to_k6
+- load_test_k6
 variables:
   TAG_LATEST: $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:latest
   TAG_COMMIT: $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA
@@ -18,8 +19,11 @@ publish:
   - docker push $TAG_LATEST
   rules:
   - if: '$CI_COMMIT_REF_NAME == "main"'
-deploy:
+  - if: '$CI_COMMIT_REF_NAME == "dev_deploy"'
+deploy_prod:
   stage: deploy
+  environment:
+    name: main
   image: docker:20.10
   tags:
   - deployment
@@ -28,20 +32,109 @@ deploy:
   before_script:
   - apk add --no-cache curl
   script:
-  - chmod og= $ID_RSA
+  - chmod og= "$ID_RSA"
   - apk update && apk add openssh-client
   - ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY"
   - ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker pull $TAG_COMMIT"
-  - ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker container rm -f haggle_bot || true"
-  - ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker run -d -p 8940:3000 --name haggle_bot -e API_KEY=$API_KEY -e DISCORD_TOKEN=$DISCORD_TOKEN -e OPENAI_API_KEY=$OPENAI_API_KEY -e SENTRY_DSN=$SENTRY_DSN -e GCP_PROJECT_ID=$GCP_PROJECT_ID -e GCP_SERVICE_ACCOUNT_KEY=$GCP_SERVICE_ACCOUNT_KEY -v $CI_PROJECT_DIR/data-misc:/src/utils/data-misc $TAG_COMMIT"
+  - ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker container rm -f $PROD_CONTAINER_NAME || true"
+  - ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker run -d -p $PROD_SERVER_PORT:3000 --name $PROD_CONTAINER_NAME -e API_KEY=$API_KEY -e DISCORD_TOKEN=$DISCORD_TOKEN -e OPENAI_API_KEY=$OPENAI_API_KEY -e SENTRY_DSN=$SENTRY_DSN -v $CI_PROJECT_DIR/data-misc:/src/utils/data-misc $TAG_COMMIT"
   rules:
   - if: '$CI_COMMIT_REF_NAME == "main"'
-postman_tests:
-  stage: test
+deploy_dev:
+  stage: deploy
+  environment:
+    name: dev_deploy
+  image: docker:20.10
+  tags:
+  - deployment
+  services:
+  - docker:20.10-dind
+  before_script:
+  - apk add --no-cache curl
+  script:
+  - chmod og= "$ID_RSA"
+  - apk update && apk add openssh-client
+  - ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY"
+  - ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker pull $TAG_COMMIT"
+  - ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker container rm -f $DEV_CONTAINER_NAME || true"
+  - ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker run -d -p $DEV_SERVER_PORT:3000 --name $DEV_CONTAINER_NAME -e API_KEY=$API_KEY -e DISCORD_TOKEN=$DISCORD_TOKEN -e OPENAI_API_KEY=$OPENAI_API_KEY -e SENTRY_DSN=$SENTRY_DSN -v $CI_PROJECT_DIR/data-misc:/src/utils/data-misc $TAG_COMMIT"
+  rules:
+  - if: '$CI_COMMIT_REF_NAME == "dev_deploy"'
+postman_tests_prod:
+  stage: postman_tests
+  environment:
+    name: main
   image: docker:20.10
   services:
   - docker:20.10-dind
   script:
-  - docker run -v "$CI_PROJECT_DIR/tests:/etc/newman" -t postman/newman:latest run "/etc/newman/Discord_GPT_Bot_Testing.postman_collection.json" --reporters="cli"
+  - docker run -v "$CI_PROJECT_DIR/tests:/etc/newman" -t postman/newman:latest run "/etc/newman/Discord_GPT_Bot_Testing.postman_collection.json" -e "/etc/newman/PROD.postman_environment.json" --reporters="cli"
   rules:
   - if: '$CI_COMMIT_REF_NAME == "main"'
+postman_tests_dev:
+  stage: postman_tests
+  environment:
+    name: main
+  image: docker:20.10
+  services:
+  - docker:20.10-dind
+  script:
+  - docker run -v "$CI_PROJECT_DIR/tests:/etc/newman" -t postman/newman:latest run "/etc/newman/Discord_GPT_Bot_Testing.postman_collection.json" -e "/etc/newman/DEV.postman_environment.json" --reporters="cli"
+  rules:
+  - if: '$CI_COMMIT_REF_NAME == "dev_deploy"'
+convert_postman_to_k6_prod:
+  stage: convert_postman_to_k6
+  environment:
+    name: main
+  image: node:latest
+  before_script:
+    - npm install -g postman-to-k6
+  script:
+    - postman-to-k6 "$CI_PROJECT_DIR/tests/Discord_GPT_Bot_Testing.postman_collection.json" -e $CI_PROJECT_DIR/tests/PROD.postman_environment.json -o $CI_PROJECT_DIR/tests/k6Script.js
+  artifacts:
+    paths:
+      - k6Script.js
+  rules:
+  - if: '$CI_COMMIT_REF_NAME == "main"'
+convert_postman_to_k6_dev:
+  stage: convert_postman_to_k6
+  environment:
+    name: dev_deploy
+  image: node:latest
+  before_script:
+    - npm install -g postman-to-k6
+  script:
+    - postman-to-k6 /tests/Discord_GPT_Bot_Testing.postman_collection.json -e /tests/DEV.postman_environment.json -o /tests/k6Script.js
+  artifacts:
+    paths:
+      - k6Script.js
+  rules:
+  - if: '$CI_COMMIT_REF_NAME == "dev_deploy"'
+load_test_k6_prod:
+  stage: load_test_k6
+  environment:
+    name: main
+  image: 
+    name: loadimpact/k6:latest
+    entrypoint: [""]
+  script:
+    - k6 run k6Script.js
+  dependencies: 
+    - convert_postman_to_k6_prod
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "main"'
+load_test_k6_dev:
+  stage: load_test_k6
+  environment:
+    name: dev_deploy
+  image: 
+    name: loadimpact/k6:latest
+    entrypoint: [""]
+  script:
+    - pwd
+    - ls
+    - k6 run /tests/k6Script.js
+  dependencies: 
+    - convert_postman_to_k6_dev
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "dev_deploy"'
