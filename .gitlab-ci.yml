@@ -30,7 +30,7 @@ deploy:
   - apk add --no-cache curl
   - apk update && apk add openssh-client
   - eval $(ssh-agent -s)
-  - echo "$ID_RSA" | base64 --decode > id_rsa
+  - echo "$ID_RSA" | base64 -d > id_rsa
   - chmod 600 id_rsa
   - ssh-add id_rsa
   - ls -l
