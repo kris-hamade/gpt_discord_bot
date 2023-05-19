@@ -143,7 +143,9 @@ load_test_k6_dev:
   services:
     - docker:20.10-dind
   script:
-    - docker run -v "$CI_PROJECT_DIR/tests:/src" -i grafana/k6 run /src/k6Script.js
+    - ls $CI_PROJECT_DIR/tests
+    - ls $CI_PROJECT_DIR
+    - docker run -v $CI_PROJECT_DIR/tests:/src -i grafana/k6 run /src/k6Script.js
   dependencies:
     - convert_postman_to_k6_dev
   tags:
