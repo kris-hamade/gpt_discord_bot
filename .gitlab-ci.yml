@@ -139,11 +139,14 @@ load_test_k6_dev:
   stage: load_test_k6
   environment:
     name: dev_deploy
-  image:
-    name: loadimpact/k6:latest
-    entrypoint: [""]
+  image: docker:19.03.12
+  services:
+    - docker:19.03.12-dind
+  before_script:
+    - docker info
   script:
-    - k6 run ./tests/k6Script-dev.js
+    - docker pull loadimpact/k6:latest
+    - docker run --rm -v $(pwd)/tests:/tests loadimpact/k6 run /tests/k6Script-dev.js
   dependencies:
     - convert_postman_to_k6_dev
   tags:
