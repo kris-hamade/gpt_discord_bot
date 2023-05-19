@@ -93,7 +93,7 @@ convert_postman_to_k6_prod:
     - postman-to-k6 "$CI_PROJECT_DIR/tests/Discord_GPT_Bot_Testing.postman_collection.json" -e $CI_PROJECT_DIR/tests/PROD.postman_environment.json -o $CI_PROJECT_DIR/tests/k6Script.js
   artifacts:
     paths:
-      - k6Script.js
+      - $CI_PROJECT_DIR/tests/k6Script.js
   rules:
   - if: '$CI_COMMIT_REF_NAME == "main"'
 convert_postman_to_k6_dev:
@@ -107,7 +107,7 @@ convert_postman_to_k6_dev:
     - postman-to-k6 $CI_PROJECT_DIR/tests/Discord_GPT_Bot_Testing.postman_collection.json -e $CI_PROJECT_DIR/tests/DEV.postman_environment.json -o $CI_PROJECT_DIR/tests/k6Script.js
   artifacts:
     paths:
-      - k6Script.js
+      - $CI_PROJECT_DIR/tests/k6Script.js
   rules:
   - if: '$CI_COMMIT_REF_NAME == "dev_deploy"'
 load_test_k6_prod:
@@ -118,7 +118,7 @@ load_test_k6_prod:
     name: loadimpact/k6:latest
     entrypoint: [""]
   script:
-    - k6 run k6Script.js
+    - k6 run $CI_PROJECT_DIR/tests/k6Script.js
   dependencies: 
     - convert_postman_to_k6_prod
   rules:
