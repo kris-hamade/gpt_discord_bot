@@ -140,7 +140,7 @@ load_test_k6_dev:
   environment:
     name: dev_deploy
   image: 
-    name: loadimpact/k6:latest
+    name: grafana/k6:latest
     entrypoint: [""]
   script:
     - pwd
