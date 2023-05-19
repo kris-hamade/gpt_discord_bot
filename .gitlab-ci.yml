@@ -147,8 +147,6 @@ load_test_k6_dev:
     entrypoint: [""]
   script:
     - k6 run ./tests/k6Script.js
-    - ls
-    - ls ..
   dependencies:
     - convert_postman_to_k6_dev
   tags:
