@@ -70,7 +70,7 @@ postman_tests_prod:
   services:
     - docker:20.10-dind
   script:
-    - docker run -v "$CI_PROJECT_DIR/tests:/etc/newman" -t postman/newman:latest run "/etc/newman/Discord_GPT_Bot_Testing_PROD.postman_collection.json"--reporters="cli"
+    - docker run -v "$CI_PROJECT_DIR/tests:/etc/newman" -t postman/newman:latest run "/etc/newman/Discord_GPT_Bot_Testing_PROD.postman_collection.json" --reporters="cli"
   tags:
     - gitlab-org-docker
   rules:
