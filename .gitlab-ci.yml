@@ -99,7 +99,7 @@ convert_postman_to_k6_prod:
     - postman-to-k6 "$CI_PROJECT_DIR/tests/Discord_GPT_Bot_Testing_PROD.postman_collection.json" -o $CI_PROJECT_DIR/tests/k6Script.js
   artifacts:
     paths:
-      - $CI_PROJECT_DIR/libs
+      - $CI_PROJECT_DIR/tests/libs
       - $CI_PROJECT_DIR/tests/k6Script.js
   tags:
     - gitlab-org-docker
@@ -114,9 +114,10 @@ convert_postman_to_k6_dev:
     - npm install -g @apideck/postman-to-k6
   script:
     - postman-to-k6 $CI_PROJECT_DIR/tests/Discord_GPT_Bot_Testing_DEV.postman_collection.json -o $CI_PROJECT_DIR/tests/k6Script.js
+    - ls
   artifacts:
     paths:
-      - $CI_PROJECT_DIR/libs
+      - $CI_PROJECT_DIR/tests/libs
       - $CI_PROJECT_DIR/tests/k6Script.js
   tags:
     - gitlab-org-docker
@@ -146,6 +147,8 @@ load_test_k6_dev:
     entrypoint: [""]
   script:
     - k6 run ./tests/k6Script.js
+    - ls
+    - ls ..
   dependencies:
     - convert_postman_to_k6_dev
   tags:
