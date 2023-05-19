@@ -43,7 +43,7 @@ deploy:
       export CONTAINER_NAME="haggle_bot_dev"
     fi
   - ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker container rm -f $CONTAINER_NAME || true"
-  - ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker run -d -p $DEPLOY_PORT:3000 --name $CONTAINER_NAME -e API_KEY=$API_KEY -e DISCORD_TOKEN=$DISCORD_TOKEN -e OPENAI_API_KEY=$OPENAI_API_KEY -e SENTRY_DSN=$SENTRY_DSN -e GCP_PROJECT_ID=$GCP_PROJECT_ID -e GCP_SERVICE_ACCOUNT_KEY=$GCP_SERVICE_ACCOUNT_KEY -v $CI_PROJECT_DIR/data-misc:/src/utils/data-misc $TAG_COMMIT"
+  - ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker run -d -p $DEPLOY_PORT:3000 --name $CONTAINER_NAME -e API_KEY=$API_KEY -e DISCORD_TOKEN=$DISCORD_TOKEN -e OPENAI_API_KEY=$OPENAI_API_KEY -e SENTRY_DSN=$SENTRY_DSN -v $CI_PROJECT_DIR/data-misc:/src/utils/data-misc $TAG_COMMIT"
   rules:
   - if: '$CI_COMMIT_REF_NAME == "main"'
   - if: '$CI_COMMIT_REF_NAME == "dev_deploy"'
