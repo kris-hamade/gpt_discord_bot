@@ -138,8 +138,10 @@ load_test_k6_prod:
 load_test_k6_dev:
   stage: load_test_k6
   environment:
-    name: main
-  image: loadimpact/k6:latest
+    name: dev_deploy
+  image:
+    name: loadimpact/k6:latest
+    entrypoint: [""]
   script:
     - ls $CI_PROJECT_DIR/tests
     - ls $CI_PROJECT_DIR
