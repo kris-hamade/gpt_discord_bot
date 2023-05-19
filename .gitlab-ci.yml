@@ -139,13 +139,12 @@ load_test_k6_dev:
   stage: load_test_k6
   environment:
     name: main
-  image: docker:20.10
-  services:
-    - docker:20.10-dind
+  image: loadimpact/k6:latest
   script:
     - ls $CI_PROJECT_DIR/tests
     - ls $CI_PROJECT_DIR
-    - docker run -v $CI_PROJECT_DIR/tests:/src -i grafana/k6 run /src/k6Script.js
+    - k6 run ./tests/k6Script.js
+    - k6 run $CI_PROJECT_DIR/tests/k6Script.js
   dependencies:
     - convert_postman_to_k6_dev
   tags:
