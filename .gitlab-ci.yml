@@ -109,8 +109,6 @@ convert_postman_to_k6_dev:
 load_test_k6:
   stage: load_test_k6
   image: loadimpact/k6
-  dependencies:
-    - convert_postman_to_k6
   script:
     - k6 run k6Script.js
   rules:
