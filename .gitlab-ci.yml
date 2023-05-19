@@ -64,18 +64,22 @@ postman_tests_prod:
   stage: postman_tests
   environment:
     name: main
-  image: postman/newman:latest
+  image: docker:20.10
+  services:
+  - docker:20.10-dind
   script:
-  - newman run $CI_PROJECT_DIR/tests/Discord_GPT_Bot_Testing.postman_collection.json -e $CI_PROJECT_DIR/tests/PROD.postman_environment.json --reporters="cli"
+  - docker run -v "$CI_PROJECT_DIR/tests:/etc/newman" -t postman/newman:latest run "/etc/newman/Discord_GPT_Bot_Testing.postman_collection.json" -e "/etc/newman/PROD.postman_environment.json" --reporters="cli"
   rules:
   - if: '$CI_COMMIT_REF_NAME == "main"'
 postman_tests_dev:
   stage: postman_tests
   environment:
-    name: dev_deploy
-  image: postman/newman:latest
+    name: main
+  image: docker:20.10
+  services:
+  - docker:20.10-dind
   script:
-  - newman run $CI_PROJECT_DIR/tests/Discord_GPT_Bot_Testing.postman_collection.json -e $CI_PROJECT_DIR/tests/DEV.postman_environment.json --reporters="cli"
+  - docker run -v "$CI_PROJECT_DIR/tests:/etc/newman" -t postman/newman:latest run "/etc/newman/Discord_GPT_Bot_Testing.postman_collection.json" -e "/etc/newman/DEV.postman_environment.json" --reporters="cli"
   rules:
   - if: '$CI_COMMIT_REF_NAME == "dev_deploy"'
 convert_postman_to_k6_prod:
@@ -100,7 +104,7 @@ convert_postman_to_k6_dev:
   before_script:
     - npm install -g postman-to-k6
   script:
-    - postman-to-k6 "$CI_PROJECT_DIR/tests/Discord_GPT_Bot_Testing.postman_collection.json" -e $CI_PROJECT_DIR/tests/DEV.postman_environment.json -o $CI_PROJECT_DIR/tests/k6Script.js
+    - postman-to-k6 /tests/Discord_GPT_Bot_Testing.postman_collection.json -e /tests/DEV.postman_environment.json -o /tests/k6Script.js
   artifacts:
     paths:
       - k6Script.js
