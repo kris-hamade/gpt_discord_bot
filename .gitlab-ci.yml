@@ -108,7 +108,9 @@ convert_postman_to_k6_dev:
   - if: '$CI_COMMIT_REF_NAME == "dev_deploy"'
 load_test_k6:
   stage: load_test_k6
-  image: loadimpact/k6:latest
+  image: 
+    name: loadimpact/k6:latest
+    entrypoint: [""]
   script:
     - k6 run $CI_PROJECT_DIR/tests/k6Script.js
   rules:
