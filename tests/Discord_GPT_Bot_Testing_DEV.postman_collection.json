@@ -354,7 +354,7 @@
 						{
 							"key": "file",
 							"type": "file",
-							"src": "/D:/Development/GitHub/roll20-journal-scraper/test.json"
+							"src": "./test.json"
 						}
 					]
 				},
@@ -383,7 +383,7 @@
 						{
 							"key": "file",
 							"type": "file",
-							"src": "/D:/Development/GitHub/roll20-journal-scraper/test.json"
+							"src": "./test.json"
 						}
 					]
 				},
