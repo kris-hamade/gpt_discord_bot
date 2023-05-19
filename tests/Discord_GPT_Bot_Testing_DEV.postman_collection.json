@@ -33,9 +33,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{server_url}}/api/status",
+					"raw": "haggle.hamy.dev/api/status",
 					"host": [
-						"{{server_url}}"
+						"haggle.hamy.dev"
 					],
 					"path": [
 						"api",
@@ -71,9 +71,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{server_url}}/api/chatHistory",
+					"raw": "haggle.hamy.dev/api/chatHistory",
 					"host": [
-						"{{server_url}}"
+						"haggle.hamy.dev"
 					],
 					"path": [
 						"api",
@@ -132,9 +132,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{server_url}}/api/listFiles/All",
+					"raw": "haggle.hamy.dev/api/listFiles/All",
 					"host": [
-						"{{server_url}}"
+						"haggle.hamy.dev"
 					],
 					"path": [
 						"api",
@@ -171,9 +171,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{server_url}}/api/currentJournal",
+					"raw": "haggle.hamy.dev/api/currentJournal",
 					"host": [
-						"{{server_url}}"
+						"haggle.hamy.dev"
 					],
 					"path": [
 						"api",
@@ -209,9 +209,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{server_url}}/api/currentHandouts",
+					"raw": "haggle.hamy.dev/api/currentHandouts",
 					"host": [
-						"{{server_url}}"
+						"haggle.hamy.dev"
 					],
 					"path": [
 						"api",
@@ -293,9 +293,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{server_url}}/api/config",
+					"raw": "haggle.hamy.dev/api/config",
 					"host": [
-						"{{server_url}}"
+						"haggle.hamy.dev"
 					],
 					"path": [
 						"api",
@@ -331,9 +331,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{server_url}}/api/uptime",
+					"raw": "haggle.hamy.dev/api/uptime",
 					"host": [
-						"{{server_url}}"
+						"haggle.hamy.dev"
 					],
 					"path": [
 						"api",
@@ -359,9 +359,9 @@
 					]
 				},
 				"url": {
-					"raw": "{{server_url}}/api/uploadRoll20Data/Handouts",
+					"raw": "haggle.hamy.dev/api/uploadRoll20Data/Handouts",
 					"host": [
-						"{{server_url}}"
+						"haggle.hamy.dev"
 					],
 					"path": [
 						"api",
@@ -388,9 +388,9 @@
 					]
 				},
 				"url": {
-					"raw": "{{server_url}}/api/uploadRoll20Data/Journal",
+					"raw": "haggle.hamy.dev/api/uploadRoll20Data/Journal",
 					"host": [
-						"{{server_url}}"
+						"haggle.hamy.dev"
 					],
 					"path": [
 						"api",
