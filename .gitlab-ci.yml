@@ -94,7 +94,7 @@ convert_postman_to_k6_prod:
     name: main
   image: node:latest
   before_script:
-    - npm install -g postman-to-k6
+    - npm install -g @apideck/postman-to-k6
   script:
     - postman-to-k6 "$CI_PROJECT_DIR/tests/Discord_GPT_Bot_Testing_PROD.postman_collection.json" -o $CI_PROJECT_DIR/tests/k6Script.js
   artifacts:
@@ -110,7 +110,7 @@ convert_postman_to_k6_dev:
     name: dev_deploy
   image: node:latest
   before_script:
-    - npm install -g postman-to-k6
+    - npm install -g @apideck/postman-to-k6
   script:
     - postman-to-k6 $CI_PROJECT_DIR/tests/Discord_GPT_Bot_Testing_DEV.postman_collection.json -o $CI_PROJECT_DIR/tests/k6Script.js
   artifacts:
