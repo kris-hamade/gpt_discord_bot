@@ -112,6 +112,7 @@ load_test_k6:
     name: loadimpact/k6:latest
     entrypoint: [""]
   script:
+    - pwd
     - k6 run k6Script.js
   rules:
   - if: '$CI_COMMIT_REF_NAME == "main"'
