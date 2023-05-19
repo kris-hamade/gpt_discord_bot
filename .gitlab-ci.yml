@@ -100,20 +100,36 @@ convert_postman_to_k6_dev:
   before_script:
     - npm install -g postman-to-k6
   script:
-    - postman-to-k6 "$CI_PROJECT_DIR/tests/Discord_GPT_Bot_Testing.postman_collection.json" -e $CI_PROJECT_DIR/tests/DEV.postman_environment.json -o k6Script.js
+    - postman-to-k6 "$CI_PROJECT_DIR/tests/Discord_GPT_Bot_Testing.postman_collection.json" -e $CI_PROJECT_DIR/tests/DEV.postman_environment.json -o /k6Script.js
   artifacts:
     paths:
       - k6Script.js
   rules:
   - if: '$CI_COMMIT_REF_NAME == "dev_deploy"'
-load_test_k6:
+load_test_k6_prod:
   stage: load_test_k6
+  environment:
+    name: main
   image: 
     name: loadimpact/k6:latest
     entrypoint: [""]
   script:
-    - pwd
     - k6 run k6Script.js
+  dependencies: 
+    - convert_postman_to_k6_prod
   rules:
-  - if: '$CI_COMMIT_REF_NAME == "main"'
-  - if: '$CI_COMMIT_REF_NAME == "dev_deploy"'
+    - if: '$CI_COMMIT_REF_NAME == "main"'
+    - if: '$CI_COMMIT_REF_NAME == "dev_deploy"'
+load_test_k6_dev:
+  stage: load_test_k6
+  environment:
+    name: dev_deploy
+  image: 
+    name: loadimpact/k6:latest
+    entrypoint: [""]
+  script:
+    - k6 run k6Script.js
+  dependencies: 
+    - convert_postman_to_k6_dev
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "dev_deploy"'
