@@ -99,6 +99,7 @@ convert_postman_to_k6_prod:
     - postman-to-k6 "$CI_PROJECT_DIR/tests/Discord_GPT_Bot_Testing_PROD.postman_collection.json" -o $CI_PROJECT_DIR/tests/k6Script.js
   artifacts:
     paths:
+      - $CI_PROJECT_DIR/libs
       - $CI_PROJECT_DIR/tests/k6Script.js
   tags:
     - gitlab-org-docker
@@ -115,6 +116,7 @@ convert_postman_to_k6_dev:
     - postman-to-k6 $CI_PROJECT_DIR/tests/Discord_GPT_Bot_Testing_DEV.postman_collection.json -o $CI_PROJECT_DIR/tests/k6Script.js
   artifacts:
     paths:
+      - $CI_PROJECT_DIR/libs
       - $CI_PROJECT_DIR/tests/k6Script.js
   tags:
     - gitlab-org-docker
@@ -124,13 +126,13 @@ load_test_k6_prod:
   stage: load_test_k6
   environment:
     name: main
-  image: docker:20.10
-  services:
-    - docker:20.10-dind
+  image:
+    name: loadimpact/k6:latest
+    entrypoint: [""]
   script:
-    - docker run -v "$CI_PROJECT_DIR/tests:/src" -i grafana/k6 run /src/k6Script.js
+    - k6 run ./tests/k6Script.js
   dependencies:
-    - convert_postman_to_k6_prod
+    - convert_postman_to_k6_dev
   tags:
     - gitlab-org-docker
   rules:
@@ -143,7 +145,7 @@ load_test_k6_dev:
     name: loadimpact/k6:latest
     entrypoint: [""]
   script:
-    - k6 run ./tests/k6Script-dev.js
+    - k6 run ./tests/k6Script.js
   dependencies:
     - convert_postman_to_k6_dev
   tags:
