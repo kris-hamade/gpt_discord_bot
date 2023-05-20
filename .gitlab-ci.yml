@@ -133,7 +133,7 @@ load_test_k6_prod:
   script:
     - k6 run ./tests/k6Script.js
   dependencies:
-    - convert_postman_to_k6_dev
+    - convert_postman_to_k6_prod
   tags:
     - gitlab-org-docker
   rules:
