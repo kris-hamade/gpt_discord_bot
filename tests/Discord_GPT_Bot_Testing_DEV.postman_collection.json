@@ -33,9 +33,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "haggle.hamy.dev/api/status",
+					"raw": "haggledev.hamy.dev/api/status",
 					"host": [
-						"haggle.hamy.dev"
+						"haggledev.hamy.dev"
 					],
 					"path": [
 						"api",
@@ -71,9 +71,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "haggle.hamy.dev/api/chatHistory",
+					"raw": "haggledev.hamy.dev/api/chatHistory",
 					"host": [
-						"haggle.hamy.dev"
+						"haggledev.hamy.dev"
 					],
 					"path": [
 						"api",
@@ -132,9 +132,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "haggle.hamy.dev/api/listFiles/All",
+					"raw": "haggledev.hamy.dev/api/listFiles/All",
 					"host": [
-						"haggle.hamy.dev"
+						"haggledev.hamy.dev"
 					],
 					"path": [
 						"api",
@@ -171,9 +171,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "haggle.hamy.dev/api/currentJournal",
+					"raw": "haggledev.hamy.dev/api/currentJournal",
 					"host": [
-						"haggle.hamy.dev"
+						"haggledev.hamy.dev"
 					],
 					"path": [
 						"api",
@@ -209,9 +209,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "haggle.hamy.dev/api/currentHandouts",
+					"raw": "haggledev.hamy.dev/api/currentHandouts",
 					"host": [
-						"haggle.hamy.dev"
+						"haggledev.hamy.dev"
 					],
 					"path": [
 						"api",
@@ -293,9 +293,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "haggle.hamy.dev/api/config",
+					"raw": "haggledev.hamy.dev/api/config",
 					"host": [
-						"haggle.hamy.dev"
+						"haggledev.hamy.dev"
 					],
 					"path": [
 						"api",
@@ -331,9 +331,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "haggle.hamy.dev/api/uptime",
+					"raw": "haggledev.hamy.dev/api/uptime",
 					"host": [
-						"haggle.hamy.dev"
+						"haggledev.hamy.dev"
 					],
 					"path": [
 						"api",
@@ -359,9 +359,9 @@
 					]
 				},
 				"url": {
-					"raw": "haggle.hamy.dev/api/uploadRoll20Data/Handouts",
+					"raw": "haggledev.hamy.dev/api/uploadRoll20Data/Handouts",
 					"host": [
-						"haggle.hamy.dev"
+						"haggledev.hamy.dev"
 					],
 					"path": [
 						"api",
@@ -388,9 +388,9 @@
 					]
 				},
 				"url": {
-					"raw": "haggle.hamy.dev/api/uploadRoll20Data/Journal",
+					"raw": "haggledev.hamy.dev/api/uploadRoll20Data/Journal",
 					"host": [
-						"haggle.hamy.dev"
+						"haggledev.hamy.dev"
 					],
 					"path": [
 						"api",
