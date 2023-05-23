@@ -2,7 +2,7 @@
 // Instantiate moment.js for timestamping
 const moment = require('moment');
 // Sets the version of the bot
-const version = "1.4.2.0";
+const version = "1.4.3.0";
 // Sets the GPT model
 let gptModel = "gpt-4";
 // Sets the GPT temperature
