@@ -15,6 +15,10 @@ const {
 } = require("../utils/data-misc/config");
 const { getChatConfig, setChatConfig } = require("./chatConfig");
 
+// Include the required packages for slash commands
+const { REST } = require('@discordjs/rest');
+const { Routes } = require('discord-api-types/v9');
+
 // Create a new Discord client
 const client = new Discord.Client({
   intents: [
@@ -59,111 +63,8 @@ async function handleMessage(message) {
 
   message.content = message.content.replace(/<@[!&]?\d+>/g, "").trim();
 
-  // Discord bot commands
-  const cmdForgetAll = "/forgetall"; // Clear all chat history
-  const cmdForgetMe = "/forgetme";
-  const cmdPersona = "/persona";
-  const cmdSetGptModel = "/model";
-  const cmdSetGptTemp = "/temp";
-  const cmdGetUptime = "/uptime";
-  const cmdAbout = "/about";
-
   // Show as typing in the discord channel
   message.channel.sendTyping();
-
-  // command to change persona if the message starts with /persona
-  if (message.content.startsWith(cmdPersona)) {
-    // split message content to find args
-    const args = message.content.split(" ");
-    if (args.length > 1) {
-      // should be command + persona name (two args)
-      const personalityName = args[1].toLowerCase();
-
-      // Check persona to see if it's a valid key in 'personalities'.
-      if (Object.keys(personalities).includes(personalityName)) {
-        userConfig.currentPersonality = personalityName;
-        message.reply(`Switched to persona ${personalityName}.`);
-      } else {
-        // List the available personas since they chose an incorrect one.
-        message.reply(
-          `Invalid persona: ${personalityName}. \n Use one of these\n  ${Object.keys(
-            personalities
-          ).join("\n  ")}`
-        );
-      }
-    } else {
-      message.reply(`Usage: ${cmdPersona} <persona>`);
-    } // help msg
-    // Save the new config
-    setChatConfig(nickname, userConfig);
-    return;
-  }
-
-  // Command to change GPT model
-  if (message.content.startsWith(cmdSetGptModel)) {
-    const args = message.content.split(" ");
-    if (args.length > 1) {
-      const newModel = args[1].toLowerCase();
-      const result = setGptModel(newModel);
-      message.reply(result.message);
-    } else {
-      message.reply(`Usage: ${cmdSetGptModel} <model>`);
-    }
-    return;
-  }
-
-  // Command to change GPT temperature
-  if (message.content.startsWith(cmdSetGptTemp)) {
-    const args = message.content.split(" ");
-    if (args.length > 1) {
-      const newTemp = args[1].toLowerCase();
-      const result = setGptTemperature(newTemp);
-      message.reply(result.message);
-    } else {
-      message.reply(`Usage: ${cmdSetGptTemp} <temp>`);
-    }
-    return;
-  }
-
-  // Command to get uptime of the bot
-  if (message.content.startsWith(cmdGetUptime)) {
-    const uptime = getUptime();
-    message.reply(`Uptime: ${uptime}`);
-    return;
-  }
-
-  // Command to get configuration information about the bot. Version, GPT model, etc.
-  if (message.content.startsWith(cmdAbout)) {
-    const configInfo = getConfigInformation();
-    message.reply(configInfo);
-    return;
-  }
-
-  // command to clear chat history
-  if (message.content.includes(cmdForgetMe)) {
-    clearUsersHistory(nickname)
-      .then(() => {
-        message.reply(`--Memory of ${nickname} Erased--`); // tell user memory was erased
-      })
-      .catch((err) => {
-        message.reply(`Unable to erase memory of ${nickname}`);
-      });
-
-    return;
-  }
-
-  // command to clear chat history
-  if (message.content.includes(cmdForgetAll)) {
-    clearAllHistory()
-      .then(() => {
-        message.reply("-- Memory Erased --"); // tell user memory was erased
-      })
-      .catch((err) => {
-        message.reply("Unable to erase memory");
-      });
-
-    return;
-  }
 
   // Preprocess Message and Return Data from our DnD Journal / Sessions
   // Also sends user nickname to retrieve data about their character
@@ -205,15 +106,171 @@ async function handleMessage(message) {
   }
 }
 
+// Slash command configuration
+const commands = [
+  {
+    name: 'personas',
+    description: 'Manage personas',
+    options: [
+      {
+        name: 'list',
+        description: 'List all available personas',
+        type: 1, // Discord's ApplicationCommandOptionType for SUB_COMMAND
+      },
+      {
+        name: 'select',
+        description: 'Change your current persona',
+        type: 1, // Discord's ApplicationCommandOptionType for SUB_COMMAND
+        options: [
+          {
+            name: 'name',
+            type: 3, // Discord's ApplicationCommandOptionType for STRING
+            description: 'The name of the persona',
+            required: true,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    name: 'model',
+    description: 'Change the GPT model',
+    options: [
+      {
+        name: 'name',
+        type: 3, // Discord's ApplicationCommandOptionType for STRING
+        description: 'The name of the model',
+        required: true,
+      },
+    ],
+  },
+  {
+    name: 'temp',
+    description: 'Set the GPT temperature',
+    options: [
+      {
+        name: 'value',
+        type: 10, // Discord's ApplicationCommandOptionType for NUMBER
+        description: 'The temperature value',
+        required: true,
+      },
+    ],
+  },
+  {
+    name: 'uptime',
+    description: 'Get the uptime of the bot',
+  },
+  {
+    name: 'about',
+    description: 'Get information about the bot',
+  },
+  {
+    name: 'forgetme',
+    description: 'Clear your chat history',
+  },
+  {
+    name: 'forgetall',
+    description: 'Clear all chat history',
+  },
+];
+
 function start() {
-  client.on("ready", () => {
+  client.on("ready", async () => {
     console.log(`Logged in as ${client.user.tag}!`);
+
+    // Slash command registration
+    const rest = new REST({ version: '9' }).setToken(process.env.DISCORD_TOKEN);
+
+    try {
+      console.log('Started refreshing application (/) commands.');
+
+      await rest.put(
+        Routes.applicationCommands(client.user.id),
+        { body: commands },
+      );
+
+      console.log('Successfully reloaded application (/) commands.');
+    } catch (error) {
+      console.error(error);
+    }
   });
+
+  // Handling the interaction created when a user invokes your slash command.
+  client.on('interactionCreate', async interaction => {
+    if (!interaction.isCommand()) return;
+
+    const { commandName } = interaction;
+
+    switch (commandName) {
+      case 'personas':
+        const subCommand = interaction.options.getSubcommand();
+        if (subCommand === 'list') {
+          // List available personas
+          await interaction.reply(`Available personas are: ${Object.keys(personalities).join(", ")}`);
+        } else if (subCommand === 'select') {
+          // Switch to the selected persona
+          const newPersona = interaction.options.getString('name');
+          if (Object.keys(personalities).includes(newPersona)) {
+            userConfig.currentPersonality = newPersona;
+            await interaction.reply(`Switched to persona ${newPersona}.`);
+          } else {
+            await interaction.reply(`Invalid persona: ${newPersona}. \n Use one of these\n  ${Object.keys(personalities).join("\n  ")}`);
+          }
+        }
+        break;
+
+      case 'model':
+        const modelName = interaction.options.getString('name');
+        const modelResult = setGptModel(modelName);
+        await interaction.reply(modelResult.message);
+        break;
+
+      case 'temp':
+        const newTemp = interaction.options.getNumber('value');
+        const tempResult = setGptTemperature(newTemp);
+        await interaction.reply(tempResult.message);
+        break;
+
+      case 'uptime':
+        const uptime = getUptime();
+        await interaction.reply(`Uptime: ${uptime}`);
+        break;
+
+      case 'about':
+        const configInfo = getConfigInformation();
+        await interaction.reply(configInfo);
+        break;
+
+      case 'forgetme':
+        const user = interaction.user.username;
+        clearUsersHistory(user)
+          .then(() => {
+            interaction.reply(`--Memory of ${user} Erased--`);
+          })
+          .catch((err) => {
+            interaction.reply(`Unable to erase memory of ${user}`);
+          });
+        break;
+
+      case 'forgetall':
+        clearAllHistory()
+          .then(() => {
+            interaction.reply("-- Memory Erased --");
+          })
+          .catch((err) => {
+            interaction.reply("Unable to erase memory");
+          });
+        break;
+
+      default:
+        await interaction.reply('Unknown command');
+    }
+  });
+
   client.on("messageCreate", handleMessage);
 
   client.login(process.env.DISCORD_TOKEN);
 }
-
 module.exports = {
   start,
 };
