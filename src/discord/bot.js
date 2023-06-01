@@ -28,7 +28,6 @@ const client = new Discord.Client({
 });
 
 // required persona vars
-let currentPersonality = "haggle";
 const personalities = personas;
 
 async function handleMessage(message) {
@@ -56,7 +55,7 @@ async function handleMessage(message) {
 
   // Get the user's config
   let userConfig = await getChatConfig(nickname);
-  let currentPersonality = userConfig.currentPersonality;
+  let currentPersonality = personalities[userConfig.currentPersonality];
 
   message.content = message.content.replace(/<@[!&]?\d+>/g, "").trim();
 
@@ -165,10 +164,10 @@ async function handleMessage(message) {
 
     return;
   }
-  
+
   // Preprocess Message and Return Data from our DnD Journal / Sessions
   // Also sends user nickname to retrieve data about their character
-  if (message.content !== "" && currentPersonality !== "assistant") {
+  if (message.content !== "" && currentPersonality !== "assistant" && currentPersonality.type !== "wow") {
     dndData = await preprocessUserInput(message.content, nickname);
   } else {
     dndData = "No DnD Data Found";
@@ -179,10 +178,10 @@ async function handleMessage(message) {
     // generate response from ChatGPT API
     let responseText = await generateResponse(
       message.content,
-      personalities[currentPersonality],
+      currentPersonality,
       dndData,
       nickname,
-      currentPersonality
+      currentPersonality.name
     );
 
     // trim persona name from response text if it exists.
@@ -196,7 +195,7 @@ async function handleMessage(message) {
     buildHistory("user", nickname, message.content);
 
     //Add GPT Response to Chat History
-    buildHistory("assistant", currentPersonality, responseText, nickname);
+    buildHistory("assistant", currentPersonality.name, responseText, nickname);
 
     // print trimmed response to discord
     return message.reply(responseText);
