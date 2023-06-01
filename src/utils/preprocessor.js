@@ -108,7 +108,6 @@ async function preprocessUserInput(input, nickname) {
       if (Array.isArray(fileContent)) {
         fileContent.forEach((doc) => {
           // Stem the words in the Name and Bio fields
-          console.log(doc.Name);
           let stemmedName =
             doc && doc.Name && typeof doc.Name === "string"
               ? doc.Name.split(" ")
