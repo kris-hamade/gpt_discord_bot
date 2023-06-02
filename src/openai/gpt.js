@@ -1,13 +1,8 @@
 const fs = require("fs");
 const path = require("path");
-const {
-  getCharacterLimit,
-  getGptModel,
-  getGptTemperature,
-} = require("../utils/data-misc/config.js");
+const { getCharacterLimit } = require("../utils/data-misc/config.js");
 const { Configuration, OpenAIApi } = require("openai");
 const { getHistory } = require("../discord/historyLog.js");
-const { max, get } = require("lodash");
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -24,7 +19,7 @@ const haggleStatsFilePath = path.join(
 
 // Set the max prompt size * 4 is about to calculate token size
 // characterLimit is set in the config.js file
-const maxPromptSize = getCharacterLimit();
+var maxPromptSize = 4000 * 4;
 
 // Set the max tokens to 1/4 of the max prompt size
 //const maxTokens = maxPromptSize / 4;
@@ -35,13 +30,18 @@ async function generateResponse(
   dndData,
   nickname,
   personality,
+  model,
+  temperature
 ) {
+
   // Read in the file containing the haggle stats
   let haggleStats = JSON.parse(
     fs.readFileSync(`${haggleStatsFilePath}`, "utf8")
   );
 
   haggleStatsPrompt = `You have died **${haggleStats.haggleDeaths} times** and Valon has had to spend **${haggleStats.moneySpent} GOLD** getting him back.`;
+
+  maxPromptSize = getCharacterLimit(model);
 
   const chatHistory = await getSizedHistory(
     prompt,
@@ -60,7 +60,7 @@ async function generateResponse(
 
   try {
     const response = await openai.createChatCompletion({
-      model: getGptModel(),
+      model: model,
       messages: [
         {
           role: "system",
@@ -87,11 +87,10 @@ async function generateResponse(
           content: `${nickname} says: ${prompt}`,
         },
       ],
-      temperature: getGptTemperature(),
+      temperature: temperature,
     });
 
     const message = response.data.choices[0].message.content;
-    
     // Log the number of tokens used
     console.log("Prompt tokens used:", response.data.usage.prompt_tokens);
     console.log(
