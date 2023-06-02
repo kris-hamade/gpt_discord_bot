@@ -77,12 +77,15 @@ async function handleMessage(message) {
   // interaction with ChatGPT API starts here.
   try {
     // generate response from ChatGPT API
+    // generate response from ChatGPT API
     let responseText = await generateResponse(
       message.content,
       currentPersonality,
       dndData,
       nickname,
-      currentPersonality.name
+      currentPersonality.name,
+      userConfig.model,
+      userConfig.temperature
     );
 
     // trim persona name from response text if it exists.
@@ -214,7 +217,7 @@ function start() {
             // Switch to the selected persona
             const newPersona = interaction.options.getString('name').toLowerCase();
             if (Object.keys(personalities).map(key => key.toLowerCase()).includes(newPersona)) {
-              let userConfig = await getChatConfig(interaction.user.username);
+              userConfig = await getChatConfig(interaction.user.username);
               userConfig.currentPersonality = newPersona;
               setChatConfig(interaction.user.username, userConfig);  // Save the updated config
               await interaction.reply(`Switched to persona ${newPersona}.`);
@@ -226,15 +229,26 @@ function start() {
 
         case 'model':
           const modelName = interaction.options.getString('name');
-          const modelResult = setGptModel(modelName);
-          await interaction.reply(modelResult.message);
+          // get user's config
+          userConfig = await getChatConfig(interaction.user.username);
+          // update the user's config with the new model
+          userConfig.model = modelName;
+          // save the updated config
+          setChatConfig(interaction.user.username, userConfig);
+          await interaction.reply(`Model switched to ${modelName}`);
           break;
 
         case 'temp':
           const newTemp = interaction.options.getNumber('value');
-          const tempResult = setGptTemperature(newTemp);
-          await interaction.reply(tempResult.message);
+          // get user's config
+          userConfig = await getChatConfig(interaction.user.username);
+          // update the user's config with the new temperature
+          userConfig.temperature = newTemp;
+          // save the updated config
+          setChatConfig(interaction.user.username, userConfig);
+          await interaction.reply(`Temperature set to ${newTemp}`);
           break;
+
 
         case 'uptime':
           const uptime = getUptime();
