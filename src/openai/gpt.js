@@ -34,7 +34,9 @@ async function generateResponse(
   persona,
   dndData,
   nickname,
-  personality
+  personality,
+  model,
+  temperature
 ) {
   // Read in the file containing the haggle stats
   let haggleStats = JSON.parse(
