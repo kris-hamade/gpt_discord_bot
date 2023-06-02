@@ -197,73 +197,81 @@ function start() {
 
   // Handling the interaction created when a user invokes your slash command.
   client.on('interactionCreate', async interaction => {
-    if (!interaction.isCommand()) return;
+    console.log(`Received interaction: ${interaction.commandName}`);
 
-    const { commandName } = interaction;
+    try {
+      if (!interaction.isCommand()) return;
 
-    switch (commandName) {
-      case 'personas':
-        const subCommand = interaction.options.getSubcommand();
-        if (subCommand === 'list') {
-          // List available personas
-          await interaction.reply(`Available personas are: ${Object.keys(personalities).join(", ")}`);
-        } else if (subCommand === 'select') {
-          // Switch to the selected persona
-          const newPersona = interaction.options.getString('name');
-          if (Object.keys(personalities).includes(newPersona)) {
-            userConfig.currentPersonality = newPersona;
-            await interaction.reply(`Switched to persona ${newPersona}.`);
-          } else {
-            await interaction.reply(`Invalid persona: ${newPersona}. \n Use one of these\n  ${Object.keys(personalities).join("\n  ")}`);
+      const { commandName } = interaction;
+
+      switch (commandName) {
+        case 'personas':
+          const subCommand = interaction.options.getSubcommand();
+          if (subCommand === 'list') {
+            // List available personas
+            await interaction.reply(`Available personas are: ${Object.keys(personalities).join(", ")}`);
+          } else if (subCommand === 'select') {
+            // Switch to the selected persona
+            const newPersona = interaction.options.getString('name').toLowerCase();
+            if (Object.keys(personalities).map(key => key.toLowerCase()).includes(newPersona)) {
+              let userConfig = await getChatConfig(interaction.user.username);
+              userConfig.currentPersonality = newPersona;
+              setChatConfig(interaction.user.username, userConfig);  // Save the updated config
+              await interaction.reply(`Switched to persona ${newPersona}.`);
+            } else {
+              await interaction.reply(`Invalid persona: ${newPersona}. \n Use one of these\n  ${Object.keys(personalities).join("\n  ")}`);
+            }
           }
-        }
-        break;
+          break;
 
-      case 'model':
-        const modelName = interaction.options.getString('name');
-        const modelResult = setGptModel(modelName);
-        await interaction.reply(modelResult.message);
-        break;
+        case 'model':
+          const modelName = interaction.options.getString('name');
+          const modelResult = setGptModel(modelName);
+          await interaction.reply(modelResult.message);
+          break;
 
-      case 'temp':
-        const newTemp = interaction.options.getNumber('value');
-        const tempResult = setGptTemperature(newTemp);
-        await interaction.reply(tempResult.message);
-        break;
+        case 'temp':
+          const newTemp = interaction.options.getNumber('value');
+          const tempResult = setGptTemperature(newTemp);
+          await interaction.reply(tempResult.message);
+          break;
 
-      case 'uptime':
-        const uptime = getUptime();
-        await interaction.reply(`Uptime: ${uptime}`);
-        break;
+        case 'uptime':
+          const uptime = getUptime();
+          await interaction.reply(`Uptime: ${uptime}`);
+          break;
 
-      case 'about':
-        const configInfo = getConfigInformation();
-        await interaction.reply(configInfo);
-        break;
+        case 'about':
+          const configInfo = getConfigInformation();
+          await interaction.reply(configInfo);
+          break;
 
-      case 'forgetme':
-        const user = interaction.user.username;
-        clearUsersHistory(user)
-          .then(() => {
-            interaction.reply(`--Memory of ${user} Erased--`);
-          })
-          .catch((err) => {
-            interaction.reply(`Unable to erase memory of ${user}`);
-          });
-        break;
+        case 'forgetme':
+          const user = interaction.user.username;
+          clearUsersHistory(user)
+            .then(() => {
+              interaction.reply(`--Memory of ${user} Erased--`);
+            })
+            .catch((err) => {
+              interaction.reply(`Unable to erase memory of ${user}`);
+            });
+          break;
 
-      case 'forgetall':
-        clearAllHistory()
-          .then(() => {
-            interaction.reply("-- Memory Erased --");
-          })
-          .catch((err) => {
-            interaction.reply("Unable to erase memory");
-          });
-        break;
+        case 'forgetall':
+          clearAllHistory()
+            .then(() => {
+              interaction.reply("-- Memory Erased --");
+            })
+            .catch((err) => {
+              interaction.reply("Unable to erase memory");
+            });
+          break;
 
-      default:
-        await interaction.reply('Unknown command');
+        default:
+          await interaction.reply('Unknown command');
+      }
+    } catch (error) {
+      console.log(`Error handling command: ${error}`);
     }
   });
 
