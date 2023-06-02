@@ -15,7 +15,6 @@ async function getChatConfig(username) {
             "currentPersonality": "haggle",
             "model": "gpt-4",
             "temperature": 1
-
         };
 
         // Save the updated config back to the file

@@ -2,7 +2,8 @@ const _ = require("lodash");
 const fs = require("fs");
 const path = require("path");
 const natural = require("natural");
-const { getCharacterLimit, getGptModel } = require("./data-misc/config.js");
+const { getCharacterLimit } = require("./data-misc/config.js");
+const { getChatConfig } = require("../discord/chatConfig.js");
 const stemmer = natural.PorterStemmer;
 const { BrillPOSTagger } = natural;
 const lexicon = new natural.Lexicon("EN", "N", "NNP");
@@ -39,8 +40,10 @@ async function preprocessUserInput(input, nickname) {
   const fileNames = fs.readdirSync(dataFolder);
   const data = {};
 
+  const userConfig = await getChatConfig(nickname);
+
   const relevantTags =
-    getGptModel() === "gpt-3" || getGptModel() === "gpt-3.5-turbo"
+    userConfig.model === "gpt-3" || userConfig.model === "gpt-3.5-turbo"
       ? ["N", "NN", "NNS", "NNP", "NNPS"]
       : ["N", "NN", "NNS", "NNP", "NNPS", "JJ", "JJR", "JJS"];
 
@@ -92,11 +95,11 @@ async function preprocessUserInput(input, nickname) {
 
     // Set the max character count for the response
     // characterLimit is set in the config.js file
-    const maxChars = getCharacterLimit();
+    const maxChars = getCharacterLimit(userConfig.model);
 
     // Set the minimum number of tokens that must match based on GPT model
     const minMatchCount =
-      getGptModel() === "gpt-3" || getGptModel() === "gpt-3.5-turbo" ? 2 : 1;
+      userConfig.model === "gpt-3" || userConfig.model === "gpt-3.5-turbo" ? 2 : 1;
 
     // Stem the tokens
     let stemmedTokens = tokens.map((token) =>

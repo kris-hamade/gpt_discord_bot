@@ -10,8 +10,6 @@ const {
 const {
   getConfigInformation,
   getUptime,
-  setGptModel,
-  setGptTemperature,
 } = require("../utils/data-misc/config");
 const { getChatConfig, setChatConfig } = require("./chatConfig");
 
@@ -76,7 +74,6 @@ async function handleMessage(message) {
 
   // interaction with ChatGPT API starts here.
   try {
-    // generate response from ChatGPT API
     // generate response from ChatGPT API
     let responseText = await generateResponse(
       message.content,
@@ -229,30 +226,48 @@ function start() {
 
         case 'model':
           const modelName = interaction.options.getString('name');
-          const modelResult = setGptModel(modelName);
-          if (modelResult.success) {
-            // get user's config
-            let userConfig = await getChatConfig(interaction.user.username);
-            // update the user's config with the new model
-            userConfig.model = modelName;
-            // save the updated config
-            setChatConfig(interaction.user.username, userConfig);
+          userConfig = await getChatConfig(interaction.user.username);
+
+          if (userConfig) {
+            // Retrieve model from user's config and validate it
+            const allowedModels = ["gpt-3", "gpt-3.5-turbo", "gpt-4"];
+            if (allowedModels.includes(modelName)) {
+              // Update the user's config with the new model
+              userConfig.model = modelName;
+              // Save the updated config
+              setChatConfig(interaction.user.username, userConfig);
+              await interaction.reply(`Switched to GPT model ${modelName}.`);
+            } else {
+              await interaction.reply(`Invalid GPT model: ${modelName}. Allowed models: ${allowedModels.join(", ")}`);
+            }
           }
-          await interaction.reply(modelResult.message);
+          else {
+            await interaction.reply(`Could not retrieve configuration for user ${interaction.user.username}`);
+          }
           break;
 
         case 'temp':
           const newTemp = interaction.options.getNumber('value');
-          const tempResult = setGptTemperature(newTemp);
-          if (tempResult.success) {
-            // get user's config
-            let userConfig = await getChatConfig(interaction.user.username);
-            // update the user's config with the new temperature
-            userConfig.temperature = newTemp;
-            // save the updated config
-            setChatConfig(interaction.user.username, userConfig);
+          userConfig = await getChatConfig(interaction.user.username);
+
+          if (userConfig) {
+            // Convert the input to a number in case it's a string
+            const temperature = parseFloat(newTemp);
+
+            // Validate temperature
+            if (!isNaN(temperature) && temperature >= 0 && temperature <= 1) {
+              // Update the user's config with the new temperature
+              userConfig.temperature = temperature;
+              // Save the updated config
+              setChatConfig(interaction.user.username, userConfig);
+              await interaction.reply(`Set GPT temperature to ${newTemp}.`);
+            } else {
+              await interaction.reply(`Invalid GPT temperature: ${newTemp}. Temperature should be between 0 and 1.`);
+            }
           }
-          await interaction.reply(tempResult.message);
+          else {
+            await interaction.reply(`Could not retrieve configuration for user ${interaction.user.username}`);
+          }
           break;
 
         case 'uptime':
