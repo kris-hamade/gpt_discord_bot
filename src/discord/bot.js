@@ -229,26 +229,31 @@ function start() {
 
         case 'model':
           const modelName = interaction.options.getString('name');
-          // get user's config
-          userConfig = await getChatConfig(interaction.user.username);
-          // update the user's config with the new model
-          userConfig.model = modelName;
-          // save the updated config
-          setChatConfig(interaction.user.username, userConfig);
-          await interaction.reply(`Model switched to ${modelName}`);
+          const modelResult = setGptModel(modelName);
+          if (modelResult.success) {
+            // get user's config
+            let userConfig = await getChatConfig(interaction.user.username);
+            // update the user's config with the new model
+            userConfig.currentModel = modelName;
+            // save the updated config
+            setChatConfig(interaction.user.username, userConfig);
+          }
+          await interaction.reply(modelResult.message);
           break;
 
         case 'temp':
           const newTemp = interaction.options.getNumber('value');
-          // get user's config
-          userConfig = await getChatConfig(interaction.user.username);
-          // update the user's config with the new temperature
-          userConfig.temperature = newTemp;
-          // save the updated config
-          setChatConfig(interaction.user.username, userConfig);
-          await interaction.reply(`Temperature set to ${newTemp}`);
+          const tempResult = setGptTemperature(newTemp);
+          if (tempResult.success) {
+            // get user's config
+            let userConfig = await getChatConfig(interaction.user.username);
+            // update the user's config with the new temperature
+            userConfig.temperature = newTemp;
+            // save the updated config
+            setChatConfig(interaction.user.username, userConfig);
+          }
+          await interaction.reply(tempResult.message);
           break;
-
 
         case 'uptime':
           const uptime = getUptime();
