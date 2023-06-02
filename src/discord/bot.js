@@ -234,7 +234,7 @@ function start() {
             // get user's config
             let userConfig = await getChatConfig(interaction.user.username);
             // update the user's config with the new model
-            userConfig.currentModel = modelName;
+            userConfig.model = modelName;
             // save the updated config
             setChatConfig(interaction.user.username, userConfig);
           }

@@ -91,8 +91,7 @@ async function generateResponse(
     });
 
     const message = response.data.choices[0].message.content;
-    console.log("Temperature:", getGptTemperature()); // Log the temperature used
-    console.log("Model:", getGptModel()); // Log the model used
+    
     // Log the number of tokens used
     console.log("Prompt tokens used:", response.data.usage.prompt_tokens);
     console.log(
