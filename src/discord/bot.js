@@ -64,6 +64,7 @@ async function handleMessage(message) {
   // Show as typing in the discord channel
   message.channel.sendTyping();
 
+  console.log("this CURRENT PERSONALITY", currentPersonality);
   // Preprocess Message and Return Data from our DnD Journal / Sessions
   // Also sends user nickname to retrieve data about their character
   if (message.content !== "" && currentPersonality !== "assistant" && currentPersonality.type !== "wow") {
@@ -276,7 +277,8 @@ function start() {
           break;
 
         case 'about':
-          const configInfo = getConfigInformation();
+          const userConfig = await getChatConfig(interaction.user.username);
+          const configInfo = getConfigInformation(userConfig.model, userConfig.temperature);
           await interaction.reply(configInfo);
           break;
 
