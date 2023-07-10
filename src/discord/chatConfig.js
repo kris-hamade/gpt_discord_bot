@@ -28,6 +28,9 @@ async function setChatConfig(username, config) {
     // Reload the file
     chatConfig = JSON.parse(fs.readFileSync(chatConfigFile, 'utf-8'));
     
+    // Sets GPT version to gpt-3.5-Turbo-16k if the model is any version of gpt-3
+    chatConfig[username].model = chatConfig[username].model.includes("gpt-3") ? "gpt-3.5-turbo-16k" : chatConfig[username].model;
+
     // Overwrite the user's config
     chatConfig[username] = config;
     console.log(chatConfig[username]);

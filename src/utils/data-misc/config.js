@@ -10,7 +10,7 @@ let characterLimit = 8000 * 4;
 const startTime = moment();
 
 function getCharacterLimit(model) {
-    characterLimit = model === "gpt-4" ? 8000 * 4 : 4000 * 4;
+    characterLimit = model === "gpt-4" ? 8000 * 4 : 16000 * 4;
     return characterLimit;
 }
 
@@ -21,11 +21,12 @@ function getUptime() {
 }
 
 function getConfigInformation(model, temperature) {
+    configCharacterLimit = getCharacterLimit(model)
     let modelInformation = model !== "" ? `Model: ${model}` : "";
     let temperatureInformation = temperature !== "" ? `Temperature: ${temperature}` : "";
 
     return `Version: ${version}
-  Character Limit: ${characterLimit}
+  Character Limit: ${configCharacterLimit}
   ${modelInformation}
   ${temperatureInformation}
   Start Time: ${startTime.format('YYYY-MM-DD HH:mm:ss')}
