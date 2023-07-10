@@ -64,7 +64,7 @@ async function handleMessage(message) {
   // Show as typing in the discord channel
   message.channel.sendTyping();
 
-  console.log("this CURRENT PERSONALITY", currentPersonality);
+  console.log("THIS CURRENT PERSONALITY", currentPersonality);
   // Preprocess Message and Return Data from our DnD Journal / Sessions
   // Also sends user nickname to retrieve data about their character
   if (message.content !== "" && currentPersonality !== "assistant" && currentPersonality.type !== "wow") {
@@ -200,6 +200,8 @@ function start() {
   client.on('interactionCreate', async interaction => {
     console.log(`Received interaction: ${interaction.commandName}`);
 
+    let userConfig;
+
     try {
       if (!interaction.isCommand()) return;
 
@@ -231,7 +233,7 @@ function start() {
 
           if (userConfig) {
             // Retrieve model from user's config and validate it
-            const allowedModels = ["gpt-3", "gpt-3.5-turbo", "gpt-4"];
+            const allowedModels = ["gpt-3", "gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4"];
             if (allowedModels.includes(modelName)) {
               // Update the user's config with the new model
               userConfig.model = modelName;
@@ -277,8 +279,8 @@ function start() {
           break;
 
         case 'about':
-          const userConfig = await getChatConfig(interaction.user.username);
-          const configInfo = getConfigInformation(userConfig.model, userConfig.temperature);
+          userConfig = await getChatConfig(interaction.user.username);
+          configInfo = getConfigInformation(userConfig.model, userConfig.temperature);
           await interaction.reply(configInfo);
           break;
 
