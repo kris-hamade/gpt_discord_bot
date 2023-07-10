@@ -76,5 +76,83 @@
     "content": "Teehehehehehee! Canyea is a drow bard who was born into a prominent drow house but never truly felt like he belonged there. He was captivated by music and storytelling and eventually left his family to pursue the life of a bard. Under the guidance of a gnome bard named Nostalgia, Canyea honed his musical talents, learned to influence people, perform comedy, and pick locks. However, he's always kept an eye out for a chance to flee from danger.\n\nCanyea joined a pirate gang and proved valuable to the crew by using his night vision to assault unsuspecting merchant ships under cover of darkness. He once showed cowardice on a raid and ended up washing ashore on a distant island, where he decided to build a new life as a wandering bard.\n\nCanyea is a talented musician, storyteller, and tactician on the battlefield, using his bardic abilities to entertain crowds and earn some coins. However, he's always vigilant, fearing that his past may catch up to him.",
     "requestor": "Test",
     "timestamp": "20230602-08:51:47"
+  },
+  {
+    "type": "user",
+    "username": "Test",
+    "content": "<@1103744569339817994> hello",
+    "timestamp": "20230709-22:34:10"
+  },
+  {
+    "type": "assistant",
+    "username": "Haggle",
+    "content": "Heheheehehe! Hello, Test! How can I assist you in the wonderful world of Dungeons and Dragons today? Whether you seek knowledge or stories, I, Haggle the helpful imp, am here to serve. Weheeeheheheee!",
+    "requestor": "Test",
+    "timestamp": "20230709-22:34:10"
+  },
+  {
+    "type": "user",
+    "username": "Test",
+    "content": "<@1103744569339817994> test",
+    "timestamp": "20230709-23:02:57"
+  },
+  {
+    "type": "assistant",
+    "username": "Haggle",
+    "content": "Heheheehehe! Hello, Test! You've successfully conducted your test! How can I assist you further with Dungeons or Dragons or both, weheeeheheheee!",
+    "requestor": "Test",
+    "timestamp": "20230709-23:02:57"
+  },
+  {
+    "type": "user",
+    "username": "Test",
+    "content": "hello",
+    "timestamp": "20230709-23:42:54"
+  },
+  {
+    "type": "assistant",
+    "username": "Haggle",
+    "content": "Teehehehehehee! Well met, Test! It's always a pleasure to greet a fellow enthusiast of Dungeons & Dragons! How might this humble imp, Haggle, be of assistance to you today?",
+    "requestor": "Test",
+    "timestamp": "20230709-23:42:54"
+  },
+  {
+    "type": "user",
+    "username": "Test",
+    "content": "<@1103744569339817994> Tell me about the Hawks",
+    "timestamp": "20230710-00:02:31"
+  },
+  {
+    "type": "assistant",
+    "username": "Haggle",
+    "content": "Teehehee! Let me enlighten you about The Hawks! They're a bunch of adventurous heroes who never shy away from a challenging quest – be it uncovering a dark cult, dealing with rowdy pack of wolves, or delving into old, dust-stifling libraries filled with arcane knowledge. \n\nThey're a diverse group made up of a dark elf, a dragonborn, a human and an impressive warforged, each with their own unique skills and capabilities. Friendly in nature, they have been quite effective in handling the problems throughout Ortelia. They've proven themselves to be much more than just naive trouble scribblers, overcoming difficult situations time after time. And trust me, I've had the pleasure of witnessing their triumphs and failures – sometimes with a hint of satisfaction as they often have to clutch their bags of gold to pull me out of the afterlife. Teeheheehe! \n\nThey have their own guild in Gandur, run by the grumpy gnome named Havvish, and tended to by the hyper-efficient Gloria Hanbrook. Now, just between you, me and any nosy pixies that might be listening, Valon Dreadmyst, that dark elf, is quite the character, with a fondness for provoking... a rather fiery infernal patron. Heheheehehehe! And then there’s the formidable, intelligent dragonborn, Ignis who radiates spotless courage most of the time, hehe. Overall, The Hawks, despite their individual quirks, are a formidable band of heroes who are making their mark in the world of Esteria.\n\nWehehehehehee! And that, dear Test, is the short feathers and scales of it!",
+    "requestor": "Test",
+    "timestamp": "20230710-00:02:31"
+  },
+  {
+    "type": "user",
+    "username": "Test",
+    "content": "<@1103744569339817994> test",
+    "timestamp": "20230710-00:05:51"
+  },
+  {
+    "type": "assistant",
+    "username": "Haggle",
+    "content": "Weheeeheheheee! Hello again, Test! I, Haggle, the knowledgeable imp from the lower planes of Esteria, have received your communication loud and clear. How may I provide you with fascinating knowledge or epic tales of Dungeons & Dragons today?",
+    "requestor": "Test",
+    "timestamp": "20230710-00:05:51"
+  },
+  {
+    "type": "user",
+    "username": "Test",
+    "content": "test",
+    "timestamp": "20230710-00:07:49"
+  },
+  {
+    "type": "assistant",
+    "username": "Haggle",
+    "content": "Teehehehehehee! Test well received! How else can Haggle assist in your tests on Dungeons and Dragons?",
+    "requestor": "Test",
+    "timestamp": "20230710-00:07:49"
   }
 ]
