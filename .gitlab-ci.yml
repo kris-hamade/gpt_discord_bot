@@ -39,7 +39,7 @@ deploy_prod:
     - ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker container rm -f $PROD_CONTAINER_NAME || true"
     - ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker run -d -p $PROD_SERVER_PORT:3000 --name $PROD_CONTAINER_NAME -e API_KEY=$API_KEY -e DISCORD_TOKEN=$DISCORD_TOKEN -e OPENAI_API_KEY=$OPENAI_API_KEY -e SENTRY_DSN=$SENTRY_DSN -v $CI_PROJECT_DIR/data-misc:/src/utils/data-misc --restart=unless-stopped $TAG_COMMIT"
   tags:
-    - deployment
+    - cloud
   rules:
     - if: '$CI_COMMIT_REF_NAME == "main"'
 deploy_dev:
