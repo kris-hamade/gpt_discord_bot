@@ -25,8 +25,6 @@ function isCustomToken(token, customNouns) {
 
 async function preprocessUserInput(input, nickname) {
   const customNouns = await loadNamesData();
-  const dataFolder = path.join(__dirname, "data-json");
-  const fileNames = fs.readdirSync(dataFolder);
   const data = {};
 
   const userConfig = await getChatConfig(nickname);
@@ -35,12 +33,6 @@ async function preprocessUserInput(input, nickname) {
     userConfig.model === "gpt-3" || userConfig.model === "gpt-3.5-turbo"
       ? ["N", "NN", "NNS", "NNP", "NNPS"]
       : ["N", "NN", "NNS", "NNP", "NNPS", "JJ", "JJR", "JJS"];
-
-  fileNames.forEach((file) => {
-    const filePath = path.join(dataFolder, file);
-    const content = fs.readFileSync(filePath, "utf-8");
-    data[file] = JSON.parse(content);
-  });
 
   const tokenizer = new natural.WordTokenizer();
 
