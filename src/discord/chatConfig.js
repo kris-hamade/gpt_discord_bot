@@ -1,5 +1,7 @@
 const fs = require('fs');
 const path = require('path');
+const db = require('../utils/db');
+
 
 // Read the file and parse the JSON
 const chatConfigFile = path.join('.', 'src', 'utils', 'data-misc', 'chatconfig.json');
