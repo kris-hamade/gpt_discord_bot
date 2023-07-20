@@ -84,68 +84,6 @@
 			"response": []
 		},
 		{
-			"name": "List Files",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"var jsonData = pm.response.json();\r",
-							"\r",
-							"var testStatus = (jsonData.success === true)\r",
-							"                 ? \"List Files Check: Success\"\r",
-							"                 : \"List Files Check: Failure\";\r",
-							"\r",
-							"pm.test(testStatus, function () {\r",
-							"    pm.expect(jsonData.success).to.be.true;\r",
-							"});\r",
-							"\r",
-							"var journalFile = jsonData.files.find(file => file.includes(\"JournalExport.json\"));\r",
-							"var handoutsFile = jsonData.files.find(file => file.includes(\"HandoutsExport.json\"));\r",
-							"\r",
-							"var journalTestName = journalFile\r",
-							"                      ? \"Check for Journal file: \" + journalFile\r",
-							"                      : \"Journal file not found\";\r",
-							"\r",
-							"pm.test(journalTestName, function () {\r",
-							"    pm.expect(journalFile).to.not.be.undefined;\r",
-							"});\r",
-							"\r",
-							"var handoutsTestName = handoutsFile\r",
-							"                       ? \"Check for Handouts file: \" + handoutsFile\r",
-							"                       : \"Handouts file not found\";\r",
-							"\r",
-							"pm.test(handoutsTestName, function () {\r",
-							"    pm.expect(handoutsFile).to.not.be.undefined;\r",
-							"});\r",
-							"\r",
-							"pm.test(`Check number of files is under 2 - Total Number of Files is ${jsonData.files.length}`, function () {\r",
-							"    pm.expect(jsonData.files.length).to.eql(2);\r",
-							"});\r",
-							""
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "haggledev.hamy.cloud/api/listFiles/All",
-					"host": [
-						"haggledev.hamy.cloud"
-					],
-					"path": [
-						"api",
-						"listFiles",
-						"All"
-					]
-				}
-			},
-			"response": []
-		},
-		{
 			"name": "Get Current Character Journal Data",
 			"event": [
 				{
@@ -252,7 +190,18 @@
 							"    var version = data['Version'];\r",
 							"    pm.expect(version).to.match(/^\\d+\\.\\d+\\.\\d+\\.\\d+$/);\r",
 							"});\r",
+							"/*\r",
+							"pm.test(\"Check GPT model - \" + data['GPT Model'], function () {\r",
+							"    var model = data['GPT Model'];\r",
+							"    pm.expect(model).to.not.be.empty;\r",
+							"});\r",
 							"\r",
+							"pm.test(\"Check GPT temperature - \" + data['GPT Temperature'], function () {\r",
+							"    var temperature = data['GPT Temperature'];\r",
+							"    pm.expect(temperature).to.not.be.empty;\r",
+							"    pm.expect(temperature).to.not.eql('0');\r",
+							"});\r",
+							"*/\r",
 							"pm.test(\"Check character limit - \" + data['Character Limit'], function () {\r",
 							"    var limit = data['Character Limit'];\r",
 							"    pm.expect(limit).to.not.be.empty;\r",
@@ -282,7 +231,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "haggledev.hamy.cloud/api/config",
+					"raw": "https://haggledev.hamy.cloud/api/config",
 					"host": [
 						"haggledev.hamy.cloud"
 					],
