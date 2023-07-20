@@ -24,9 +24,6 @@ router.get('/currentJournal', getCurrentJournal);
 // Get current Handouts, no API key required
 router.get('/currentHandouts', getCurrentHandouts);
 
-// List Files in data-json directory, no API key required
-router.get('/listFiles/:type', controller.listFiles);
-
 // POST Endpoints
 // Endpoint to replace Roll20 JSON Data, API key required
 router.post('/uploadRoll20Data/:type', authMiddleware, upload.single('file'), controller.uploadRoll20Data);

@@ -1,5 +1,4 @@
-const path = require('path');
-const fs = require('fs');
+const Roll20Data = require("../models/roll20Data");
 
 const API_KEY = process.env.API_KEY; // Make sure to add your API key to your .env file
 
@@ -30,24 +29,18 @@ exports.getCurrentHandouts = async (req, res) => {
     getCurrentRoll20Data('Handouts', req, res);
 };
 
-// Helper function to get current Roll20 data for a specific type
-function getCurrentRoll20Data(type, req, res) {
-    const dataJsonDir = path.join(__dirname, '../utils/data-json');
-
-    // Find the most recent file that matches the type
-    const serverFileName = fs.readdirSync(dataJsonDir).filter(fn => fn.endsWith(`${type}Export.json`)).sort().reverse()[0];
-    if (!serverFileName) {
-        return res.status(404).json({
-            success: false,
-            message: `No ${type}Export.json file found.`
-        });
-    }
-
-    const filePath = path.join(dataJsonDir, serverFileName);
-
+// Helper function to get current Roll20 data
+async function getCurrentRoll20Data(type, req, res) {
     try {
-        // Read server file
-        const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        // Query MongoDB
+        const data = await Roll20Data.find({}).lean();
+
+        if (!data || data.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: `No data found in the database.`
+            });
+        }
 
         res.json({
             success: true,
