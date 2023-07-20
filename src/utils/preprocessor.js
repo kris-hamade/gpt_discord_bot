@@ -12,13 +12,11 @@ const tagger = new BrillPOSTagger(lexicon, rules);
 const Roll20Data = require('../models/roll20Data'); // assuming you save the schema in a file called roll20Data.js
 
 async function loadNamesData() {
-  const namesData = await Roll20Data.find({});
-
-  return namesData
+  const data = await Roll20Data.find({});
+  return data
     .filter(({ Name }) => Name) // Filter out entries where Name is not truthy (e.g., undefined, null, or empty string)
     .flatMap(({ Name }) => Name.split(" "));
 }
-
 function isCustomToken(token, customNouns) {
   return customNouns.some(
     (customNoun) => customNoun.toLowerCase() === token.toLowerCase()
