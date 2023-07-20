@@ -9,26 +9,16 @@ const { BrillPOSTagger } = natural;
 const lexicon = new natural.Lexicon("EN", "N", "NNP");
 const rules = new natural.RuleSet("EN");
 const tagger = new BrillPOSTagger(lexicon, rules);
+const Roll20Data = require('../models/roll20Data'); // assuming you save the schema in a file called roll20Data.js
 
-const namesFolder = path.join(__dirname, "data-json");
+async function loadNamesData() {
+  const namesData = await Roll20Data.find({});
 
-function loadNamesData() {
-  const namesFileNames = fs.readdirSync(namesFolder);
-  const namesFilePattern = /^\d{8}-JournalExport\.json$/;
-  const namesFileName = namesFileNames.find((name) =>
-    namesFilePattern.test(name)
-  );
-  if (!namesFileName) {
-    throw new Error("No names file found");
-  }
-
-  const namesFile = path.join(namesFolder, namesFileName);
-  const namesData = JSON.parse(fs.readFileSync(namesFile, "utf-8"));
-  
   return namesData
     .filter(({ Name }) => Name) // Filter out entries where Name is not truthy (e.g., undefined, null, or empty string)
     .flatMap(({ Name }) => Name.split(" "));
 }
+
 function isCustomToken(token, customNouns) {
   return customNouns.some(
     (customNoun) => customNoun.toLowerCase() === token.toLowerCase()
@@ -36,7 +26,7 @@ function isCustomToken(token, customNouns) {
 }
 
 async function preprocessUserInput(input, nickname) {
-  const customNouns = loadNamesData();
+  const customNouns = await loadNamesData();
   const dataFolder = path.join(__dirname, "data-json");
   const fileNames = fs.readdirSync(dataFolder);
   const data = {};
@@ -91,7 +81,7 @@ async function preprocessUserInput(input, nickname) {
     return relevantTokens;
   }
 
-  function search_data(tokens, data) {
+  async function search_data(tokens, data) {
     let relevantDocs = [];
 
     // Set the max character count for the response
@@ -108,51 +98,47 @@ async function preprocessUserInput(input, nickname) {
     );
     console.log("Stemmed tokens: ", stemmedTokens);
 
-    _.forEach(data, (fileContent) => {
-      if (Array.isArray(fileContent)) {
-        fileContent.forEach((doc) => {
-          // Stem the words in the Name and Bio fields
-          let stemmedName =
-            doc && doc.Name && typeof doc.Name === "string"
-              ? doc.Name.split(" ")
-                  .map((word) => stemmer.stem(word.toLowerCase()))
-                  .join(" ")
-              : "";
-          let stemmedBio =
-            doc && doc.Bio && typeof doc.Bio === "string"
-              ? doc.Bio.split(" ")
-                  .map((word) => stemmer.stem(word.toLowerCase()))
-                  .join(" ")
-              : "";
+    const allDocs = await Roll20Data.find({});
 
-          let matchCount = 0;
-          stemmedTokens.forEach((stemmedToken) => {
-            if (
-              stemmedName.includes(stemmedToken) ||
-              stemmedBio.includes(stemmedToken)
-            ) {
-              matchCount++;
-            }
-          });
-
-          // Only add the doc to relevantDocs if it matches a certain number of tokens
-          if (matchCount >= minMatchCount) {
-            relevantDocs.push({
-              doc,
-              count: matchCount,
-            });
-          }
+    allDocs.forEach((doc) => {
+      // Stem the words in the Name and Bio fields
+      let stemmedName =
+        doc && doc.Name && typeof doc.Name === "string"
+          ? doc.Name.split(" ")
+              .map((word) => stemmer.stem(word.toLowerCase()))
+              .join(" ")
+          : "";
+      let stemmedBio =
+        doc && doc.Bio && typeof doc.Bio === "string"
+          ? doc.Bio.split(" ")
+              .map((word) => stemmer.stem(word.toLowerCase()))
+              .join(" ")
+          : "";
+  
+      let matchCount = 0;
+      stemmedTokens.forEach((stemmedToken) => {
+        if (
+          stemmedName.includes(stemmedToken) ||
+          stemmedBio.includes(stemmedToken)
+        ) {
+          matchCount++;
+        }
+      });
+  
+      // Only add the doc to relevantDocs if it matches a certain number of tokens
+      if (matchCount >= minMatchCount) {
+        relevantDocs.push({
+          doc,
+          count: matchCount,
         });
-      } else {
-        console.warn(`fileContent is not an array: ${fileContent}`);
       }
     });
-
+  
     relevantDocs.sort((a, b) => b.count - a.count);
-
+  
     let totalCharacters = 0;
     let filteredRelevantDocs = [];
-
+  
     for (let doc of relevantDocs) {
       let docLength = JSON.stringify(doc).length;
       if (totalCharacters + docLength <= maxChars) {
@@ -162,7 +148,7 @@ async function preprocessUserInput(input, nickname) {
         break;
       }
     }
-
+  
     return JSON.stringify(filteredRelevantDocs);
   }
 
