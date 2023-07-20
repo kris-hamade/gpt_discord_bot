@@ -21,13 +21,14 @@ function loadNamesData() {
   if (!namesFileName) {
     throw new Error("No names file found");
   }
+
   const namesFile = path.join(namesFolder, namesFileName);
   const namesData = JSON.parse(fs.readFileSync(namesFile, "utf-8"));
+  
   return namesData
     .filter(({ Name }) => Name) // Filter out entries where Name is not truthy (e.g., undefined, null, or empty string)
     .flatMap(({ Name }) => Name.split(" "));
 }
-
 function isCustomToken(token, customNouns) {
   return customNouns.some(
     (customNoun) => customNoun.toLowerCase() === token.toLowerCase()

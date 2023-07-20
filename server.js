@@ -3,6 +3,7 @@ require("./src/utils/cleanup"); // Start the daily cleanup process
 const fs = require("fs");
 const path = require("path");
 const archiveDirectory = path.join(__dirname, "./src/utils/data-archive/");
+const { connectDB } = require("./src/utils/db");
 const { start: bot } = require("./src/discord/bot");
 const { sentryLogging } = require("./src/sentry/sentry");
 const express = require("express");
@@ -23,6 +24,15 @@ app.use("/api", routes);
 
 // Error handling middleware
 app.use(errorHandler);
+
+// Connect to the database
+try {
+  connectDB();
+  console.log('Successfully connected to Database');
+} catch (err) {
+  console.error('Error connecting to Database', err);
+  process.exit(1);
+}
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Server running on port ${port}`));

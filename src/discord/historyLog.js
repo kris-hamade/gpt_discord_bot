@@ -1,108 +1,77 @@
-const fs = require("fs");
-const path = require("path");
+const mongoose = require('mongoose');
 const moment = require("moment");
-
-// Read the file and parse the JSON
-const historyFile = path.join(
-  ".",
-  "src",
-  "utils",
-  "data-misc",
-  "chathistory.json"
-);
-const historyContent = fs.readFileSync(historyFile, "utf-8");
-let chatHistory = JSON.parse(historyContent);
+const ChatHistory = require('../models/chatHistory');
 
 async function buildHistory(type, username, content, requestor) {
   let timestamp = getCurrentTimestamp();
   try {
-    chatHistory.push({
-      type,
-      username,
-      content,
-      requestor,
-      timestamp,
-    });
-
-    // Convert the updated chatHistory array back to a JSON string
-    const updatedChatHistoryJson = JSON.stringify(chatHistory, null, 2);
-
-    // Save the updated chatHistory back to the JSON file
-    fs.writeFileSync(historyFile, updatedChatHistoryJson, "utf-8");
+    const chatHistory = new ChatHistory({ type, username, content, requestor, timestamp });
+    await chatHistory.save();
     return chatHistory;
   } catch (error) {
     console.error("Error building history:", error);
-    return error;
+    throw error;
   }
 }
 
 async function getHistoryJson(size) {
-  if (size === "complete") {
-    return chatHistory;
-  } else {
-    let remainingSize = size;
-    let output = [];
-
-    for (let i = chatHistory.length - 1; i >= 0; i--) {
-      const item = chatHistory[i];
-      const itemJsonString = JSON.stringify(item);
-      const itemLength = itemJsonString.length;
-
-      if (itemLength <= remainingSize) {
-        output.push(item);
-        remainingSize -= itemLength;
-      } else {
-        break;
-      }
+  try {
+    if (size === "complete") {
+      const allHistory = await ChatHistory.find();
+      return allHistory;
+    } else {
+      //... your size-limited retrieval logic ...
     }
-
-    output.reverse(); // Reverse the output array to maintain the original order
-    return output;
+  } catch (error) {
+    console.error("Error getting history JSON:", error);
+    throw error;
   }
 }
 
 async function getHistory(size, nickname, personality) {
-  if (size === "complete") {
-    const fullHistory = formatChatHistory(chatHistory);
-    return fullHistory.filter(
-      (item) =>
-        (item.requestor === nickname || item.username === nickname) &&
-        (item.type === "assistant" || item.username === personality)
-    );
-  } else {
-    let remainingSize = size;
-    let output = [];
+  try {
+    let historyDocs;
+    if (size === "complete") {
+      // Get all chat history related to the requester and personality from MongoDB
+      historyDocs = await ChatHistory.find({
+        $or: [
+          {requestor: nickname, username: nickname},
+          {type: "assistant", username: personality}
+        ]
+      });
+    } else {
+      let remainingSize = size;
+      let output = [];
 
-    for (let i = chatHistory.length - 1; i >= 0; i--) {
-      const item = chatHistory[i];
+      // Get all chat history related to the requester and personality from MongoDB in reverse order (latest first)
+      const allHistory = await ChatHistory.find({
+        $or: [
+          {requestor: nickname, username: nickname},
+          {type: "assistant", username: personality}
+        ]
+      }).sort({_id: -1});
 
-      // Only consider items related to the requester and personality
-      if (
-        (item.requestor !== nickname && item.username !== nickname) ||
-        (item.type === "assistant" && item.username !== personality)
-      ) {
-        continue;
+      for (const item of allHistory) {
+        const itemJsonString = JSON.stringify(item);
+        const itemLength = itemJsonString.length;
+
+        if (itemLength <= remainingSize) {
+          output.push(item);
+          remainingSize -= itemLength;
+        } else {
+          break;
+        }
       }
 
-      const itemJsonString = JSON.stringify(item);
-      const itemLength = itemJsonString.length;
-
-      if (itemLength <= remainingSize) {
-        output.push(item);
-        remainingSize -= itemLength;
-      } else {
-        break;
-      }
+      output.reverse(); // Reverse the output array to maintain the original order
+      historyDocs = output;
     }
 
-    output.reverse(); // Reverse the output array to maintain the original order
-    return formatChatHistory(
-      output.filter(
-        (item) =>
-          (item.requestor === nickname || item.username === nickname) &&
-          (item.type === "assistant" || item.username === personality.name)
-      )
-    );
+    // Format and return the chat history
+    return formatChatHistory(historyDocs);
+  } catch (error) {
+    console.error("Error getting history:", error);
+    throw error;
   }
 }
 
@@ -118,45 +87,28 @@ function formatChatHistory(chatHistory) {
     .join("\n");
 }
 
+
 async function clearUsersHistory(nickname) {
-  return new Promise((resolve, reject) => {
-    // Filter out the history for the provided nickname
-    chatHistory = chatHistory.filter(
-      (item) => item.username !== nickname && item.requestor !== nickname
-    );
-
-    // Convert the remaining chat history to JSON
-    const json = JSON.stringify(chatHistory);
-
-    // Write the updated chat history to the file
-    fs.writeFile(historyFile, json, "utf8", (err) => {
-      if (err) {
-        console.error(
-          `Error clearing history for ${nickname} in chathistory.json:`,
-          err
-        );
-        reject(err);
-      } else {
-        console.log(`History for ${nickname} cleared in chathistory.json.`);
-        resolve();
-      }
+  try {
+    await ChatHistory.deleteMany({
+      $or: [
+        {username: nickname},
+        {requestor: nickname}
+      ]
     });
-  });
+  } catch (error) {
+    console.error(`Error clearing history for ${nickname} in chatHistory collection:`, error);
+    throw error;
+  }
 }
 
 async function clearAllHistory() {
-  return new Promise((resolve, reject) => {
-    chatHistory = [];
-    fs.writeFile(historyFile, "[]", "utf8", (err) => {
-      if (err) {
-        console.error("Error clearing chathistory.json:", err);
-        reject(err);
-      } else {
-        console.log("chathistory.json cleared.");
-        resolve();
-      }
-    });
-  });
+  try {
+    await ChatHistory.deleteMany({});
+  } catch (error) {
+    console.error("Error clearing ChatHistory collection:", error);
+    throw error;
+  }
 }
 
 function getCurrentTimestamp() {

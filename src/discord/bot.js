@@ -34,7 +34,7 @@ const personalities = personas;
 
 async function handleMessage(message) {
   console.log(
-    `Received a message from ${message.author.username} in ${message.channel.type}`
+    `Received a message from ${message.member.nickname} in ${message.channel.type}`
   );
   // Ignore messages from other bots
   if (message.author.bot) return;
@@ -49,10 +49,10 @@ async function handleMessage(message) {
   // get nickname author and trim dicord user code string from message.
   let nickname = "";
   if (message.guild) {
-    nickname = message.member.nickname || message.author.username;
+    nickname = message.member.nickname || Namemessage.member.nickname;
   } else {
     // This is a DM, so the user doesn't have a nickname
-    nickname = message.author.username;
+    nickname = Namemessage.member.nickname;
   }
 
   // Get the user's config
@@ -217,9 +217,9 @@ function start() {
             // Switch to the selected persona
             const newPersona = interaction.options.getString('name').toLowerCase();
             if (Object.keys(personalities).map(key => key.toLowerCase()).includes(newPersona)) {
-              userConfig = await getChatConfig(interaction.user.username);
+              userConfig = await getChatConfig(interaction.member.nickname);
               userConfig.currentPersonality = newPersona;
-              setChatConfig(interaction.user.username, userConfig);  // Save the updated config
+              setChatConfig(interaction.member.nickname, userConfig);  // Save the updated config
               await interaction.reply(`Switched to persona ${newPersona}.`);
             } else {
               await interaction.reply(`Invalid persona: ${newPersona}. \n Use one of these\n  ${Object.keys(personalities).join("\n  ")}`);
@@ -229,29 +229,29 @@ function start() {
 
         case 'model':
           const modelName = interaction.options.getString('name');
-          userConfig = await getChatConfig(interaction.user.username);
+          userConfig = await getChatConfig(interaction.member.nickname);
 
           if (userConfig) {
             // Retrieve model from user's config and validate it
-            const allowedModels = ["gpt-3", "gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4"];
+            const allowedModels = ["gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4"];
             if (allowedModels.includes(modelName)) {
               // Update the user's config with the new model
               userConfig.model = modelName;
               // Save the updated config
-              setChatConfig(interaction.user.username, userConfig);
+              setChatConfig(interaction.member.nickname, userConfig);
               await interaction.reply(`Switched to GPT model ${modelName}.`);
             } else {
               await interaction.reply(`Invalid GPT model: ${modelName}. Allowed models: ${allowedModels.join(", ")}`);
             }
           }
           else {
-            await interaction.reply(`Could not retrieve configuration for user ${interaction.user.username}`);
+            await interaction.reply(`Could not retrieve configuration for user ${interaction.member.nickname}`);
           }
           break;
 
         case 'temp':
           const newTemp = interaction.options.getNumber('value');
-          userConfig = await getChatConfig(interaction.user.username);
+          userConfig = await getChatConfig(interaction.member.nickname);
 
           if (userConfig) {
             // Convert the input to a number in case it's a string
@@ -262,14 +262,14 @@ function start() {
               // Update the user's config with the new temperature
               userConfig.temperature = temperature;
               // Save the updated config
-              setChatConfig(interaction.user.username, userConfig);
+              setChatConfig(interaction.member.nickname, userConfig);
               await interaction.reply(`Set GPT temperature to ${newTemp}.`);
             } else {
               await interaction.reply(`Invalid GPT temperature: ${newTemp}. Temperature should be between 0 and 1.`);
             }
           }
           else {
-            await interaction.reply(`Could not retrieve configuration for user ${interaction.user.username}`);
+            await interaction.reply(`Could not retrieve configuration for user ${interaction.member.nickname}`);
           }
           break;
 
@@ -279,13 +279,13 @@ function start() {
           break;
 
         case 'about':
-          userConfig = await getChatConfig(interaction.user.username);
+          userConfig = await getChatConfig(interaction.member.nickname);
           configInfo = getConfigInformation(userConfig.model, userConfig.temperature);
           await interaction.reply(configInfo);
           break;
 
         case 'forgetme':
-          const user = interaction.user.username;
+          const user = interaction.member.nickname;
           clearUsersHistory(user)
             .then(() => {
               interaction.reply(`--Memory of ${user} Erased--`);

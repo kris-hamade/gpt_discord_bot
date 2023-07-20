@@ -1,7 +1,7 @@
 {
   "Valon": {
     "currentPersonality": "haggle",
-    "model": "gpt-3",
+    "model": "gpt-4",
     "temperature": 1
   },
   "Test": {
@@ -10,8 +10,8 @@
     "temperature": 1
   },
   "val0022": {
-    "currentPersonality": "haggle",
-    "model": "gpt-3.5-turbo-16k",
+    "currentPersonality": "royal",
+    "model": "gpt-4",
     "temperature": 1
   }
 }
