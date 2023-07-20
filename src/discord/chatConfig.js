@@ -1,4 +1,4 @@
-const ChatConfig = require('../models/ChatConfig');
+const ChatConfig = require('../models/chatConfig');
 
 async function getChatConfig(username) {
     let chatConfig = await ChatConfig.findOne({ username });
