@@ -37,7 +37,7 @@ deploy_prod:
     - ssh -i $ID_RSA_CLOUD -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY"
     - ssh -i $ID_RSA_CLOUD -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker pull $TAG_COMMIT"
     - ssh -i $ID_RSA_CLOUD -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker container rm -f $PROD_CONTAINER_NAME || true"
-    - ssh -i $ID_RSA_CLOUD -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker run -d -p $PROD_SERVER_PORT:3000 --name $PROD_CONTAINER_NAME -e API_KEY=$API_KEY -e DISCORD_TOKEN=$DISCORD_TOKEN -e OPENAI_API_KEY=$OPENAI_API_KEY -e SENTRY_DSN=$SENTRY_DSN -e MONGODB_URI=$MONGODB_URI -v $CI_PROJECT_DIR/prod/data-misc:/src/utils/data-misc --restart=unless-stopped $TAG_COMMIT"
+    - ssh -i $ID_RSA_CLOUD -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker run -d -p $PROD_SERVER_PORT:3000 --name $PROD_CONTAINER_NAME -e API_KEY=$API_KEY -e DISCORD_TOKEN=$DISCORD_TOKEN -e OPENAI_API_KEY=$OPENAI_API_KEY -e MONGODB_URI=$MONGODB_URI -e SENTRY_DSN=$SENTRY_DSN -v $CI_PROJECT_DIR/prod/data-misc:/src/utils/data-misc --restart=unless-stopped $TAG_COMMIT"
   tags:
     - cloud
   rules:
@@ -57,7 +57,7 @@ deploy_dev:
     - ssh -i $ID_RSA_CLOUD -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY"
     - ssh -i $ID_RSA_CLOUD -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker pull $TAG_COMMIT"
     - ssh -i $ID_RSA_CLOUD -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker container rm -f $DEV_CONTAINER_NAME || true"
-    - ssh -i $ID_RSA_CLOUD -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker run -d -p $DEV_SERVER_PORT:3000 --name $DEV_CONTAINER_NAME -e API_KEY=$API_KEY -e DISCORD_TOKEN=$DEV_DISCORD_TOKEN -e OPENAI_API_KEY=$OPENAI_API_KEY -e SENTRY_DSN=$SENTRY_DSN -e MONGODB_URI=$MONGODB_URI -v $CI_PROJECT_DIR/dev/data-misc:/src/utils/data-misc --restart=unless-stopped $TAG_COMMIT"
+    - ssh -i $ID_RSA_CLOUD -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker run -d -p $DEV_SERVER_PORT:3000 --name $DEV_CONTAINER_NAME -e API_KEY=$API_KEY -e DISCORD_TOKEN=$DEV_DISCORD_TOKEN -e OPENAI_API_KEY=$OPENAI_API_KEY -e MONGODB_URI=$MONGODB_URI -e SENTRY_DSN=$SENTRY_DSN -v $CI_PROJECT_DIR/dev/data-misc:/src/utils/data-misc --restart=unless-stopped $TAG_COMMIT"
   tags:
     - cloud
   rules:
