@@ -1,6 +1,6 @@
 const Discord = require("discord.js");
 const personas = require("../utils/data-misc/personas.json");
-const { generateResponse } = require("../openai/gpt");
+const { generateEventData, generateResponse } = require("../openai/gpt");
 const { preprocessUserInput } = require("../utils/preprocessor");
 const {
   buildHistory,
@@ -34,7 +34,7 @@ const personalities = personas;
 
 async function handleMessage(message) {
   console.log(
-    `Received a message from ${message.member.nickname} in ${message.channel.type}`
+    `Received a message from ${message.member.nickname} in ${message.channelId}`
   );
   // Ignore messages from other bots
   if (message.author.bot) return;
@@ -173,7 +173,19 @@ const commands = [
     name: 'forgetall',
     description: 'Clear all chat history',
   },
-];
+  {
+    name: 'schedule',
+    description: 'Schedule an Event',
+    options: [
+      {
+        name: 'event',
+        type: 3, // Discord's ApplicationCommandOptionType for STRING
+        description: 'Event name, date, time, and frequency of reminder',
+        required: true,
+      },
+    ],
+  }
+]
 
 function start() {
   client.on("ready", async () => {
@@ -305,6 +317,13 @@ function start() {
             });
           break;
 
+        case 'schedule':
+          const event = interaction.options.getString('event');
+          interaction.reply("Generating Event Data: " + event);
+          const reply = await generateEventData(event, interaction.channelId, client);
+          await interaction.followUp(reply);
+          break;
+
         default:
           await interaction.reply('Unknown command');
       }
@@ -318,5 +337,5 @@ function start() {
   client.login(process.env.DISCORD_TOKEN);
 }
 module.exports = {
-  start,
+  start
 };
