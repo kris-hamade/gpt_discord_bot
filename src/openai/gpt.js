@@ -3,6 +3,7 @@ const path = require("path");
 const { getCharacterLimit } = require("../utils/data-misc/config.js");
 const { Configuration, OpenAIApi } = require("openai");
 const { getHistory } = require("../discord/historyLog.js");
+const { scheduleEvent } = require("../utils/eventScheduler.js");
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -23,7 +24,6 @@ var maxPromptSize = 4000 * 4;
 
 // Set the max tokens to 1/4 of the max prompt size
 //const maxTokens = maxPromptSize / 4;
-
 async function generateResponse(
   prompt,
   persona,
@@ -119,6 +119,35 @@ async function generateResponse(
   }
 }
 
+async function generateEventData(prompt, channelId, client) {
+  try {
+    const response = await openai.createChatCompletion({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content:
+          `The user wants to schedule an event, and I need to parse specific details from their request to return a JSON object with the following fields:\n\n- Event Name: The name or title of the event.\n- Date: The date of the event in YYYY-MM-DD format.\n- Time: The time of the event in ISO 8601 timestamp format. \n- Channel: The communication channel or location where the event will take place. Omit the word channel \n- Frequency: The reminder frequency, represented in CRON format.\n- Timezone: The timezone of the event, using the best IANA Time Zone Identifier.\n\nPlease analyze the following user's request and extract the necessary information:\n\nUser's Request: `,
+        },
+        {
+          role: "user",
+          content: `${prompt}`,
+        },
+      ]
+    });
+    const message = response.data.choices[0].message.content;
+    console.log("Generated message:", message); // Log the generated message for debugging
+    console.log("Channel Id:", channelId); // Log the generated message for debugging
+    const scheduler = await scheduleEvent(JSON.parse(message), channelId, client);
+    return scheduler;
+  } catch (error) {
+    console.error("Error generating response:", error); // Log the error for debugging
+
+    const errorMessage = `Unable to Schedule Event Using Data ${prompt}`;
+    return errorMessage; // Return an empty string if an error occurs
+  }
+}
+
 async function getSizedHistory(
   prompt,
   persona,
@@ -163,4 +192,5 @@ async function personaBuilder(persona) {
 
 module.exports = {
   generateResponse,
+  generateEventData
 };
