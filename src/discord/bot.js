@@ -12,6 +12,7 @@ const {
   getUptime,
 } = require("../utils/data-misc/config");
 const { getChatConfig, setChatConfig } = require("./chatConfig");
+const { loadJobsFromDatabase } = require("../utils/eventScheduler");
 
 // Include the required packages for slash commands
 const { REST } = require('@discordjs/rest');
@@ -191,6 +192,8 @@ function start() {
   client.on("ready", async () => {
     console.log(`Logged in as ${client.user.tag}!`);
 
+    loadJobsFromDatabase(client); // Load jobs when the bot is ready
+
     // Slash command registration
     const rest = new REST({ version: '9' }).setToken(process.env.DISCORD_TOKEN);
 
@@ -337,5 +340,6 @@ function start() {
   client.login(process.env.DISCORD_TOKEN);
 }
 module.exports = {
+  client,
   start
 };
