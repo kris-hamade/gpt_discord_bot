@@ -136,10 +136,16 @@ async function generateEventData(prompt, channelId, client) {
       ]
     });
     const message = response.data.choices[0].message.content;
-    console.log("Generated message:", message); // Log the generated message for debugging
-    console.log("Channel Id:", channelId); // Log the generated message for debugging
-    const scheduler = await scheduleEvent(JSON.parse(message), channelId, client);
-    return scheduler;
+    console.log("Generated message:", message);
+    
+    try {
+      const eventData = JSON.parse(message);
+      const scheduler = await scheduleEvent(eventData, channelId, client);
+      return scheduler;
+    } catch (error) {
+      console.error("Error parsing message:", error, "Message content:", message);
+      // Handle the case where the message isn't valid JSON (e.g., return an error message or handle it differently)
+    }
   } catch (error) {
     console.error("Error generating response:", error); // Log the error for debugging
 
