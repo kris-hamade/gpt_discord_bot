@@ -7,7 +7,7 @@ const jobs = {};
 
 async function loadJobsFromDatabase(client) {
     const events = await ScheduledEvent.find({});
-
+    console.log(`Loaded ${events.length} events from the database.`);
     // Current time for comparison
     const now = moment();
 
@@ -35,8 +35,6 @@ async function loadJobsFromDatabase(client) {
         scheduleEvent(event, event.channelId, client);
     }
 }
-
-
 
 async function pingEveryone(channelId, messageContent, client) {
     try {
