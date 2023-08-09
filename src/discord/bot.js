@@ -12,7 +12,7 @@ const {
   getUptime,
 } = require("../utils/data-misc/config");
 const { getChatConfig, setChatConfig } = require("./chatConfig");
-const { loadJobsFromDatabase } = require("../utils/eventScheduler");
+const { deleteEvent, loadJobsFromDatabase } = require("../utils/eventScheduler");
 const ScheduledEvent = require('../models/scheduledEvent');
 const moment = require('moment-timezone');
 const cronstrue = require('cronstrue');
@@ -183,6 +183,18 @@ const commands = [
         name: 'event',
         type: 3, // Discord's ApplicationCommandOptionType for STRING
         description: 'Event name, date, time, and frequency of reminder',
+        required: true,
+      },
+    ],
+  },
+  {
+    name: 'deleteevent',
+    description: 'Delete a scheduled event',
+    options: [
+      {
+        name: 'event',
+        type: 3, // Discord's ApplicationCommandOptionType for STRING
+        description: 'The name of the event you want to delete',
         required: true,
       },
     ],
@@ -357,6 +369,27 @@ function start() {
           const reply = await generateEventData(event, interaction.channelId, client);
           await interaction.followUp(reply);
           break;
+
+        case 'deleteevent':
+          const eventName = interaction.options.getString('event');
+          if (!eventName) {
+            await interaction.reply(`Event name must be provided.`);
+            return;
+          }
+          try {
+            const result = await deleteEvent(eventName.toLowerCase()); // Using JavaScript's built-in toLowerCase
+            if (result) {
+              await interaction.reply(`Event with Name ${eventName} has been deleted.`);
+            } else {
+              await interaction.reply(`Event with Name ${eventName} could not be found or deleted.`);
+            }
+          } catch (error) {
+            console.error(`Error deleting event: ${error}`);
+            await interaction.reply('An error occurred while deleting the event.');
+          }
+          break;
+
+
 
         default:
           await interaction.reply('Unknown command');
