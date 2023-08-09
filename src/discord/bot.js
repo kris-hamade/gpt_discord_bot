@@ -13,6 +13,9 @@ const {
 } = require("../utils/data-misc/config");
 const { getChatConfig, setChatConfig } = require("./chatConfig");
 const { loadJobsFromDatabase } = require("../utils/eventScheduler");
+const ScheduledEvent = require('../models/scheduledEvent');
+const moment = require('moment-timezone');
+
 
 // Include the required packages for slash commands
 const { REST } = require('@discordjs/rest');
@@ -175,6 +178,10 @@ const commands = [
     description: 'Clear all chat history',
   },
   {
+    name: 'events',
+    description: 'List all scheduled events',
+  },
+  {
     name: 'schedule',
     description: 'Schedule an Event',
     options: [
@@ -318,6 +325,26 @@ function start() {
             .catch((err) => {
               interaction.reply("Unable to erase memory");
             });
+          break;
+
+        case 'events':
+          try {
+            const events = await ScheduledEvent.find({});
+            console.log("Fetched events:", events);
+            if (events.length === 0) {
+              await interaction.reply('No events are currently scheduled.');
+            } else {
+              let eventList = 'Scheduled Events:\n';
+              events.forEach(event => {
+                const eventTime = moment.tz(event.time, event.timezone).format('MMMM D, YYYY [at] h:mm A');
+                eventList += `- **${event.eventName}** on ${eventTime} (Timezone: ${event.timezone})\n`;
+              });
+              await interaction.reply(eventList);
+            }
+          } catch (error) {
+            console.error(`Error fetching events: ${error}`);
+            await interaction.reply('An error occurred while fetching the events.');
+          }
           break;
 
         case 'schedule':
