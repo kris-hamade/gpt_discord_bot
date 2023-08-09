@@ -37,9 +37,10 @@ const client = new Discord.Client({
 const personalities = personas;
 
 async function handleMessage(message) {
-  console.log(
-    `Received a message from ${message.member.nickname} in ${message.channelId}`
-  );
+  let nickname = message.guild ? (message.member ? message.member.nickname || message.author.username : message.author.username) : message.author.username;
+
+  console.log(`Received a message from ${nickname} in ${message.channelId}`);
+
   // Ignore messages from other bots
   if (message.author.bot) return;
 
@@ -49,15 +50,6 @@ async function handleMessage(message) {
     !message.mentions.has(client.user.id)
   )
     return;
-
-  // get nickname author and trim dicord user code string from message.
-  let nickname = "";
-  if (message.guild) {
-    nickname = message.member.nickname || Namemessage.member.nickname;
-  } else {
-    // This is a DM, so the user doesn't have a nickname
-    nickname = Namemessage.member.nickname;
-  }
 
   // Get the user's config
   let userConfig = await getChatConfig(nickname);
@@ -71,15 +63,16 @@ async function handleMessage(message) {
   console.log("THIS CURRENT PERSONALITY", currentPersonality);
   // Preprocess Message and Return Data from our DnD Journal / Sessions
   // Also sends user nickname to retrieve data about their character
+  let dndData;
   if (message.content !== "" && currentPersonality !== "assistant" && currentPersonality.type !== "wow") {
     dndData = await preprocessUserInput(message.content, nickname);
   } else {
     dndData = "No DnD Data Found";
   }
 
-  // interaction with ChatGPT API starts here.
+  // Interaction with ChatGPT API starts here.
   try {
-    // generate response from ChatGPT API
+    // Generate response from ChatGPT API
     let responseText = await generateResponse(
       message.content,
       currentPersonality,
@@ -90,26 +83,27 @@ async function handleMessage(message) {
       userConfig.temperature
     );
 
-    // trim persona name from response text if it exists.
+    // Trim persona name from response text if it exists.
     responseText = responseText.replace(
       new RegExp(`${currentPersonality}: |\\(${currentPersonality}\\) `, "gi"),
       ""
     );
 
-    //Chat History Use and Manipulation
+    // Chat History Use and Manipulation
     // Add the latest user message to the chat history
     buildHistory("user", nickname, message.content);
 
-    //Add GPT Response to Chat History
+    // Add GPT Response to Chat History
     buildHistory("assistant", currentPersonality.name, responseText, nickname);
 
-    // print trimmed response to discord
+    // Print trimmed response to discord
     return message.reply(responseText);
   } catch (err) {
     console.log(err.message);
     return message.reply("Unable to Generate Response");
   }
 }
+
 
 // Slash command configuration
 const commands = [
