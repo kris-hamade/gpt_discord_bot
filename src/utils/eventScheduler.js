@@ -100,7 +100,7 @@ async function scheduleEvent(eventData, channelId, client, saveToDatabase = true
     }
 
     // Generate a unique ID for the job
-    const jobId = `${eventName}-${date}-${timePart}`;
+    const jobId = getJobId(eventName, date, timePart);
     jobs[jobId] = reminderJob;
 
     // Schedule the cancellation of the reminder job at the specified time
@@ -137,8 +137,38 @@ function cancelJob(jobId) {
     }
 }
 
+async function deleteEvent(eventName) {
+    try {
+        const event = await ScheduledEvent.findOne({ eventName: { $regex: new RegExp(`^${eventName}$`, 'i') } });
+        if (event) {
+            // Extract date and time parts
+            const date = event.time.split('T')[0];
+            const timePart = event.time.split('T')[1];
+            // Construct the jobId using the helper function
+            const jobId = getJobId(eventName, date, timePart);
+            // Cancel the job using the jobId
+            cancelJob(jobId);
+            console.log(`Deleted event: ${jobId}`);
+            // Delete the event from the database
+            await event.deleteOne();
+            console.log(`Deleted event from database: ${eventName}`);
+            return true; // event was found and deleted
+        } else {
+            return false; // event was not found
+        }
+    } catch (error) {
+        console.error(`Error deleting event: ${error}`);
+        throw error;
+    }
+}
+
+function getJobId(eventName, date, timePart) {
+    return `${eventName}-${date}-${timePart}`.toLowerCase();
+}
+
 module.exports = {
     scheduleEvent,
     loadJobsFromDatabase,
-    cancelJob // Exporting the cancelJob function if needed elsewhere
+    cancelJob,
+    deleteEvent
 }
