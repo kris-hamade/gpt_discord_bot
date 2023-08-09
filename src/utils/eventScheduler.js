@@ -65,13 +65,17 @@ async function scheduleEvent(eventData, channelId, client, saveToDatabase = true
         return;
     }
 
-    // Read the eventName, frequency, timezone properties from eventData
-    const eventName = eventData.eventName;
-    const date = eventData.time.split('T')[0];
-    const timePart = eventData.time.split('T')[1];
-    const frequency = eventData.frequency;
-    const timezone = eventData.timezone;
+    // Check for both possible naming conventions
+    const eventName = eventData['Event Name'] || eventData.eventName;
+    const date = eventData.Date || eventData.time.split('T')[0];
+    const timePart = eventData.Time || eventData.time.split('T')[1];
+    const frequency = eventData.Frequency || eventData.frequency;
+    const timezone = eventData.Timezone || eventData.timezone;
 
+    if (!eventName || !date || !timePart || !frequency || !timezone) {
+        console.error('Missing required fields in eventData:', eventData);
+        return;
+    }
     // Combine Date and Time into a single ISO string, then convert to the specified timezone
     const eventTime = moment.tz(`${date}T${timePart}`, "YYYY-MM-DDTHH:mm:ss", timezone);
     if (!eventTime.isValid()) {
