@@ -13,18 +13,18 @@ async function loadJobsFromDatabase(client) {
 
     // Iterate through events and validate each one
     for (const event of events) {
-        const { eventName: eventName, time, frequency: Frequency, timezone: Timezone } = event;
-        const [Date, Time] = time.split('T'); // Split the 'time' field into Date and Time parts
+        const { eventName, time, frequency, timezone } = event;
+        const [date, timePart] = time.split('T');
 
         // Check if any field is undefined
-        if (!eventName || !Date || !Time || !Frequency || !Timezone) {
+        if (!eventName || !date || !timePart || !frequency || !timezone) {
             console.log(`Removing invalid event with missing field(s): ${eventName}`);
             await ScheduledEvent.deleteOne({ _id: event._id });
             continue;
         }
 
         // Check if the date/time is past now
-        const eventTime = moment.tz(`${Date}T${Time}`, Timezone);
+        const eventTime = moment.tz(`${date}T${timePart}`, timezone);
         if (eventTime.isBefore(now)) {
             console.log(`Removing expired event: ${eventName}`);
             await ScheduledEvent.deleteOne({ _id: event._id });
@@ -52,27 +52,28 @@ async function scheduleEvent(eventData, channelId, client) {
         return;
     }
 
-    const { 'Event Name': eventName, Date, Time, Frequency, Timezone } = eventData;
+    const { eventName, time, frequency, timezone } = eventData;
+    const [date, timePart] = time.split('T');
 
     // Check for missing or undefined fields
-    if (!eventName || !Date || !Time || !Frequency || !Timezone) {
+    if (!eventName || !date || !timePart || !frequency || !timezone) {
         console.error("Missing or undefined fields in event data:", eventData);
         return;
     }
 
     // Combine Date and Time into a single ISO string, then convert to the specified timezone
-    const eventTime = moment.tz(`${Date}T${Time}`, "YYYY-MM-DDTHH:mm:ss", Timezone);
+    const eventTime = moment.tz(`${date}T${timePart}`, "YYYY-MM-DDTHH:mm:ss", timezone);
     if (!eventTime.isValid()) {
         console.error("Invalid date or time provided.");
         return;
     }
 
     const formattedTimezone = eventTime.format('z');
-    const formattedTime = eventTime.format(`MMMM D, YYYY [at] h:mm A [${formattedTimezone || Timezone}]`);
+    const formattedTime = eventTime.format(`MMMM D, YYYY [at] h:mm A [${formattedTimezone || timezone}]`);
     await pingEveryone(channelId, `Scheduling event: ${eventName} on ${formattedTime}`, client);
 
     // Schedule a recurring job based on the cron string
-    const reminderJob = schedule.scheduleJob(Frequency, async () => {
+    const reminderJob = schedule.scheduleJob(frequency, async () => {
         await pingEveryone(channelId, `Reminder for event: ${eventName} on ${formattedTime}`, client);
     });
 
@@ -82,10 +83,10 @@ async function scheduleEvent(eventData, channelId, client) {
     }
 
     // Generate a unique ID for the job
-    const jobId = `${eventName}-${Date}-${Time}`;
+    const jobId = `${eventName}-${date}-${timePart}`;
     jobs[jobId] = reminderJob;
 
-    // Schedule the cancellation of the reminder job at the specified Time
+    // Schedule the cancellation of the reminder job at the specified time
     schedule.scheduleJob(eventTime.toDate(), async () => {
         console.log(`Cancelling reminders for event: ${eventName}`);
         cancelJob(jobId);
@@ -96,9 +97,9 @@ async function scheduleEvent(eventData, channelId, client) {
     const newEvent = new ScheduledEvent({
         eventName,
         channelId,
-        frequency: Frequency,
-        time: `${Date}T${Time}`,
-        timezone: Timezone
+        frequency,
+        time: `${date}T${timePart}`,
+        timezone
     });
     await newEvent.save();
 
