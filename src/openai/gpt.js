@@ -127,13 +127,14 @@ async function generateEventData(prompt, channelId, client) {
         {
           role: "system",
           content:
-          `The user wants to schedule an event, and I need to parse specific details from their request to return a JSON object with the following fields:\n\n- Event Name: The name or title of the event.\n- Date: The date of the event in YYYY-MM-DD format.\n- Time: The time of the event in ISO 8601 timestamp format. \n- Frequency: The reminder frequency, represented in CRON format.\n- Timezone: The timezone of the event, using the best IANA Time Zone Identifier.\n\nPlease analyze the following user's request and extract the necessary information:\n\nUser's Request: `,
+          "The user wants to schedule an event, and I need to parse specific details from their request to return a JSON object with the following fields:\\n\\n- Event Name: The name or title of the event.\\n- Date: The date of the event in YYYY-MM-DD format.\\n- Time: The time of the event in HH:mm:ss format.\\n- Frequency: The reminder frequency, represented in CRON format.\\n- Timezone: The timezone of the event, using the best IANA Time Zone Identifier.\\n\\nPlease analyze the following user's request and extract the necessary information:\\n\\nUser's Request: ",
         },
         {
           role: "user",
           content: `${prompt}`,
-        },
-      ]
+        }
+      ],
+      temperature: 0.2
     });
     const message = response.data.choices[0].message.content;
     console.log("Generated message:", message);
