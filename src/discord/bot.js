@@ -15,7 +15,7 @@ const { getChatConfig, setChatConfig } = require("./chatConfig");
 const { loadJobsFromDatabase } = require("../utils/eventScheduler");
 const ScheduledEvent = require('../models/scheduledEvent');
 const moment = require('moment-timezone');
-
+const cronstrue = require('cronstrue');
 
 // Include the required packages for slash commands
 const { REST } = require('@discordjs/rest');
@@ -330,8 +330,18 @@ function start() {
             } else {
               let eventList = 'Scheduled Events:\n';
               events.forEach(event => {
-                const eventTime = moment.tz(event.time, event.timezone).format('MMMM D, YYYY [at] h:mm A');
-                eventList += `- **${event.eventName}** on ${eventTime} (Timezone: ${event.timezone})\n`;
+                const eventTime = moment.tz(event.time, event.timezone);
+                const formattedEventTime = eventTime.format('MMMM D, YYYY [at] h:mm A');
+                const humanReadableFrequency = cronstrue.toString(event.frequency);
+                const now = moment();
+                const duration = moment.duration(eventTime.diff(now));
+                const timeRemaining = [
+                  duration.years() > 0 ? duration.years() + ' years' : null,
+                  duration.days() > 0 ? duration.days() + ' days' : null,
+                  duration.hours() > 0 ? duration.hours() + ' hours' : null,
+                  duration.minutes() > 0 ? duration.minutes() + ' minutes' : null,
+                ].filter(Boolean).join(', ');
+                eventList += `- **${event.eventName}** on ${formattedEventTime} (Timezone: ${event.timezone}, Frequency: ${humanReadableFrequency}, Time Remaining: ${timeRemaining})\n`;
               });
               await interaction.reply(eventList);
             }
