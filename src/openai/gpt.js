@@ -127,7 +127,7 @@ async function generateEventData(prompt, channelId, client) {
         {
           role: "system",
           content:
-          "The user wants to schedule an event, and I need to parse specific details from their request to return a JSON object with the following fields:\\n\\n- Event Name: The name or title of the event.\\n- Date: The date of the event in YYYY-MM-DD format.\\n- Time: The time of the event in HH:mm:ss format.\\n- Frequency: The reminder frequency, represented in CRON format.\\n- Timezone: The timezone of the event, using the best IANA Time Zone Identifier.\\n\\nPlease analyze the following user's request and extract the necessary information:\\n\\nUser's Request: ",
+            "The user wants to schedule an event, and I need to parse specific details from their request to return a JSON object with the following fields:\\n\\n- Event Name: The name or title of the event.\\n- Date: The date of the event in YYYY-MM-DD format.\\n- Time: The time of the event in HH:mm:ss format.\\n- Frequency: The reminder frequency, represented in CRON format.\\n- Timezone: The timezone of the event, using the best IANA Time Zone Identifier.\\n\\nPlease analyze the following user's request and extract the necessary information:\\n\\nUser's Request: ",
         },
         {
           role: "user",
@@ -138,7 +138,7 @@ async function generateEventData(prompt, channelId, client) {
     });
     const message = response.data.choices[0].message.content;
     console.log("Generated message:", message);
-    
+
     try {
       const eventData = JSON.parse(message);
       const scheduler = await scheduleEvent(eventData, channelId, client);
@@ -152,6 +152,24 @@ async function generateEventData(prompt, channelId, client) {
 
     const errorMessage = `Unable to Schedule Event Using Data ${prompt}`;
     return errorMessage; // Return an empty string if an error occurs
+  }
+}
+
+async function generateImage(description) {
+  console.log('Description:', description);
+  try {
+    const response = await openai.createImage({
+      prompt: description,
+      n: 1,
+      size: "1024x1024",
+    });
+
+    const image = await response.data.data[0].url;
+    console.log("Generated image:", image); // Log the generated message for debugging
+    return image;
+  } catch (error) {
+    console.error("Error generating image:", error);
+    return null;
   }
 }
 
@@ -199,5 +217,6 @@ async function personaBuilder(persona) {
 
 module.exports = {
   generateResponse,
-  generateEventData
+  generateEventData,
+  generateImage
 };

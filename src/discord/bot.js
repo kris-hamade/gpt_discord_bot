@@ -1,6 +1,7 @@
 const Discord = require("discord.js");
+const { MessageAttachment } = require('discord.js');
 const personas = require("../utils/data-misc/personas.json");
-const { generateEventData, generateResponse } = require("../openai/gpt");
+const { generateEventData, generateImage, generateResponse } = require("../openai/gpt");
 const { preprocessUserInput } = require("../utils/preprocessor");
 const {
   buildHistory,
@@ -16,6 +17,7 @@ const { deleteEvent, loadJobsFromDatabase } = require("../utils/eventScheduler")
 const ScheduledEvent = require('../models/scheduledEvent');
 const moment = require('moment-timezone');
 const cronstrue = require('cronstrue');
+const axios = require('axios');
 
 // Include the required packages for slash commands
 const { REST } = require('@discordjs/rest');
@@ -198,6 +200,25 @@ const commands = [
         required: true,
       },
     ],
+  },
+  {
+    name: 'image',
+    description: 'Generate, Transform, and Manipulate Images',
+    options: [
+      {
+        name: 'generate',
+        description: 'Generate an image from a description',
+        type: 1, // Discord's ApplicationCommandOptionType for SUB_COMMAND
+        options: [
+          {
+            name: 'description',
+            type: 3, // Discord's ApplicationCommandOptionType for STRING
+            description: 'The description of the image',
+            required: true,
+          },
+        ],
+      }
+    ]
   }
 ]
 
@@ -389,6 +410,37 @@ function start() {
           }
           break;
 
+        case 'image':
+          try {
+            // Acknowledge the interaction
+            await interaction.deferReply();
+
+            // Extract the description from the interaction
+            const description = interaction.options.getString('description');
+
+            // Call your generateImage function with the description provided
+            const imageUrl = await generateImage(description);
+
+            // Get the image using Axios and create an attachment using AttachmentBuilder
+            axios
+              .get(imageUrl, { responseType: 'arraybuffer' })
+              .then(response => {
+                const attachment = new Discord.AttachmentBuilder(response.data)
+                  .setName('image.jpg')
+                  .setDescription('Generated image');
+
+                // Assuming you want to send the attachment as part of a follow-up message
+                interaction.followUp({ files: [attachment] });
+              })
+              .catch(error => {
+                console.error(error);
+                interaction.followUp('Failed to get the generated image.');
+              });
+          } catch (err) {
+            console.error(`Error generating image: ${err}`);
+            await interaction.followUp(`An error occurred while generating the image. Please try again later.`);
+          }
+          break;
 
 
         default:
