@@ -430,7 +430,7 @@ function start() {
                   .setDescription('Generated image');
 
                 // Assuming you want to send the attachment as part of a follow-up message
-                interaction.followUp({ files: [attachment] });
+                interaction.followUp({ content: `Generating image from description: ${description}`, files: [attachment] });
               })
               .catch(error => {
                 console.error(error);
