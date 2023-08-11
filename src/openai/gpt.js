@@ -4,19 +4,13 @@ const { getCharacterLimit } = require("../utils/data-misc/config.js");
 const { Configuration, OpenAIApi } = require("openai");
 const { getHistory } = require("../discord/historyLog.js");
 const { scheduleEvent } = require("../utils/eventScheduler.js");
+const mongoose = require('mongoose');
+const HaggleStats = require('../models/haggleStats');
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
-
-const haggleStatsFilePath = path.join(
-  ".",
-  "src",
-  "utils",
-  "data-misc",
-  "haggle-stats.json"
-);
 
 // Set the max prompt size * 4 is about to calculate token size
 // characterLimit is set in the config.js file
@@ -34,10 +28,8 @@ async function generateResponse(
   temperature
 ) {
 
-  // Read in the file containing the haggle stats
-  let haggleStats = JSON.parse(
-    fs.readFileSync(`${haggleStatsFilePath}`, "utf8")
-  );
+  // Fetch haggle stats
+  const haggleStats = await getHaggleStats();
 
   haggleStatsPrompt = `You have died **${haggleStats.haggleDeaths} times** and Valon has had to spend **${haggleStats.moneySpent} GOLD** getting him back.`;
 
@@ -105,15 +97,17 @@ async function generateResponse(
   } catch (error) {
     console.error("Error generating response:", error); // Log the error for debugging
 
-    // Update Haggles Death Stats
-    haggleStats.haggleDeaths += 1;
-    haggleStats.moneySpent += 10;
+    try {
+      // Update Haggles Death Stats in MongoDB
+      haggleStats.haggleDeaths += 1;
+      haggleStats.moneySpent += 10;
 
-    // Write the updated data back to the file
-    fs.writeFileSync(
-      `${haggleStatsFilePath}`,
-      JSON.stringify(haggleStats, null, 2)
-    );
+      await haggleStats.save();
+    } catch (error) {
+      console.error("Error updating haggle stats in MongoDB:", error);
+      return;  // Return or throw error based on your error handling
+    }
+
     const errorMessage = `ARGGGGGGGGGGH WEEEEEEE HEHE SCCCCCURRRR I CAN'T RECALL THAT MUCH FROM OUR ADVENTURES!!!! ARGGHEHEHEEEEE! NOOOOT AGAIN!!!! **HAGGLE EXPLODES AND DISINTEGRATES**. \`\`\`Valon throws more money on the ground and summons Haggle again.\`\`\` Woah, sorry about that. I have died soo many times, it's horribly painful each time.... hmm I think I've died **${haggleStats.haggleDeaths} times!** Master Valon is so mad he's had to spend **${haggleStats.moneySpent} GOLD** to get me back. But anyways, I can't remember that much. Try being a little more specific when asking about our travels. `;
     return errorMessage; // Return an empty string if an error occurs
   }
@@ -213,6 +207,23 @@ async function personaBuilder(persona) {
   }
   console.log(personaMessage);
   return personaMessage;
+}
+
+async function getHaggleStats() {
+  try {
+    let haggleStats = await HaggleStats.findOne();
+
+    // If not found, initialize with default values
+    if (!haggleStats) {
+      haggleStats = new HaggleStats({ haggleDeaths: 0, moneySpent: 0 });
+      await haggleStats.save();
+    }
+
+    return haggleStats;
+  } catch (error) {
+    console.error("Error fetching haggle stats from MongoDB:", error);
+    throw error;  // propagate the error to be handled by the caller
+  }
 }
 
 module.exports = {
