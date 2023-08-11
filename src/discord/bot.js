@@ -1,6 +1,4 @@
 const Discord = require("discord.js");
-const { MessageAttachment } = require('discord.js');
-const personas = require("../utils/data-misc/personas.json");
 const { generateEventData, generateImage, generateResponse } = require("../openai/gpt");
 const { preprocessUserInput } = require("../utils/preprocessor");
 const {
@@ -18,6 +16,7 @@ const ScheduledEvent = require('../models/scheduledEvent');
 const moment = require('moment-timezone');
 const cronstrue = require('cronstrue');
 const axios = require('axios');
+const Personas = require('../models/personas');
 
 // Include the required packages for slash commands
 const { REST } = require('@discordjs/rest');
@@ -35,9 +34,6 @@ const client = new Discord.Client({
   ],
 });
 
-// required persona vars
-const personalities = personas;
-
 async function handleMessage(message) {
   let nickname = message.guild ? (message.member ? message.member.nickname || message.author.username : message.author.username) : message.author.username;
 
@@ -53,9 +49,11 @@ async function handleMessage(message) {
   )
     return;
 
-  // Get the user's config
+  // Get the user's config from the database
   let userConfig = await getChatConfig(nickname);
-  let currentPersonality = personalities[userConfig.currentPersonality];
+
+  // Fetch the persona details based on the current personality in user's chat config
+  let currentPersonality = await Personas.findOne({ name: userConfig.currentPersonality });
 
   message.content = message.content.replace(/<@[!&]?\d+>/g, "").trim();
 
@@ -66,7 +64,7 @@ async function handleMessage(message) {
   // Preprocess Message and Return Data from our DnD Journal / Sessions
   // Also sends user nickname to retrieve data about their character
   let dndData;
-  if (message.content !== "" && currentPersonality !== "assistant" && currentPersonality.type !== "wow") {
+  if (message.content !== "" && currentPersonality.name !== "AI Assistant" && currentPersonality.type !== "wow") {
     dndData = await preprocessUserInput(message.content, nickname);
   } else {
     dndData = "No DnD Data Found";
@@ -105,7 +103,6 @@ async function handleMessage(message) {
     return message.reply("Unable to Generate Response");
   }
 }
-
 
 // Slash command configuration
 const commands = [
@@ -260,18 +257,27 @@ function start() {
         case 'personas':
           const subCommand = interaction.options.getSubcommand();
           if (subCommand === 'list') {
-            // List available personas
-            await interaction.reply(`Available personas are: ${Object.keys(personalities).join(", ")}`);
+            // Fetch available personas from the database
+            const availablePersonas = await Personas.find();
+            const personaNames = availablePersonas.map(persona => persona.name); // Assuming your schema has a name field for each persona
+
+            await interaction.reply(`Available personas are: ${personaNames.join(", ")}`);
           } else if (subCommand === 'select') {
             // Switch to the selected persona
             const newPersona = interaction.options.getString('name').toLowerCase();
-            if (Object.keys(personalities).map(key => key.toLowerCase()).includes(newPersona)) {
+
+            // Check if the persona exists in the database
+            const foundPersona = await Personas.findOne({ name: newPersona });
+
+            if (foundPersona) {
               userConfig = await getChatConfig(interaction.member.nickname);
               userConfig.currentPersonality = newPersona;
               setChatConfig(interaction.member.nickname, userConfig);  // Save the updated config
               await interaction.reply(`Switched to persona ${newPersona}.`);
             } else {
-              await interaction.reply(`Invalid persona: ${newPersona}. \n Use one of these\n  ${Object.keys(personalities).join("\n  ")}`);
+              const availablePersonas = await Personas.find();
+              const personaNames = availablePersonas.map(persona => persona.name);
+              await interaction.reply(`Invalid persona: ${newPersona}. \n Use one of these\n  ${personaNames.join("\n  ")}`);
             }
           }
           break;
