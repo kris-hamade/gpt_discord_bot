@@ -6,6 +6,7 @@ const { getHistory } = require("../discord/historyLog.js");
 const { scheduleEvent } = require("../utils/eventScheduler.js");
 const mongoose = require('mongoose');
 const HaggleStats = require('../models/haggleStats');
+const { getImageDescription } = require("../utils/vision.js");
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -25,7 +26,8 @@ async function generateResponse(
   nickname,
   personality,
   model,
-  temperature
+  temperature,
+  imageDescription
 ) {
 
   // Fetch haggle stats
@@ -49,6 +51,7 @@ async function generateResponse(
   console.log("Using Haggle Stats:", haggleStatsPrompt); // Log the Haggle Stats (if any)
   console.log("Using D&D Data:", dndData); // Log the D&D Data (if any)
   console.log("Using History:", chatHistory); // Log the History (if any)
+  console.log("Using Image Description:", imageDescription); // Log the Image Description (if any)
 
   try {
     const response = await openai.createChatCompletion({
@@ -68,6 +71,10 @@ async function generateResponse(
             "--START DUNGEONS AND DRAGONS CAMPAIGN DATA-- " +
             dndData +
             " --END DUNGEONS AND DRAGONS CAMPAIGN DATA--",
+        },
+        {
+          role: "system",
+          content: "--YOU CAN SEE THIS PLEASE DESCRIBE IT-- " + "RESPOND TO THIS IMAGE AS IF YOU ARE SEEING IT WITH YOUR OWN EYES " + imageDescription + " --END THE DESCRIPTION OF WHAT YOU CAN SEE--",
         },
         {
           role: "system",
