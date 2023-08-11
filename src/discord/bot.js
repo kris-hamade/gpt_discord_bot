@@ -55,6 +55,12 @@ async function handleMessage(message) {
   // Fetch the persona details based on the current personality in user's chat config
   let currentPersonality = await Personas.findOne({ name: userConfig.currentPersonality });
 
+  // Check if currentPersonality is null
+  if (!currentPersonality) {
+    console.error(`No personality found for name: ${userConfig.currentPersonality}`);
+    return message.reply(`Sorry, I couldn't find the specified personality: ${userConfig.currentPersonality}`);
+  }
+
   message.content = message.content.replace(/<@[!&]?\d+>/g, "").trim();
 
   // Show as typing in the discord channel
