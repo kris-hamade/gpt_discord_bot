@@ -17,6 +17,7 @@ const moment = require('moment-timezone');
 const cronstrue = require('cronstrue');
 const axios = require('axios');
 const Personas = require('../models/personas');
+const { getImageDescription } = require('../utils/vision');
 
 // Include the required packages for slash commands
 const { REST } = require('@discordjs/rest');
@@ -49,6 +50,28 @@ async function handleMessage(message) {
   )
     return;
 
+  // ============================ Image Processing =============================
+  let imageDescription;
+
+  // If there's an attachment with a URL
+  if (message.attachments.size > 0 && message.attachments.first().url) {
+    console.log(`processing ${message.attachments.first().url}`);
+    imageFullDescription = await getImageDescription(message.attachments.first().url);
+    imageDescription = imageFullDescription.denseCaptions.join(", ");
+    console.log(imageDescription);
+  }
+
+
+  // If an image URL is found in the message imageDescription
+  const imgUrlPattern = /https?:\/\/[^ "]+\.(?:png|jpg|jpeg|gif)/; // Adjust this regex pattern as needed
+  if (imgUrlPattern.test(message.imageDescription)) {
+    const imgUrl = message.imageDescription.match(imgUrlPattern)[0];
+    imageFullDescription = await getImageDescription(imgUrl);
+    imageDescription = imageFullDescription.denseCaptions.join(", ");
+    console.log(imageDescription);
+  }
+  // ============================ End of Image Processing =============================
+
   // Get the user's config from the database
   let userConfig = await getChatConfig(nickname);
 
@@ -70,7 +93,7 @@ async function handleMessage(message) {
   // Preprocess Message and Return Data from our DnD Journal / Sessions
   // Also sends user nickname to retrieve data about their character
   let dndData;
-  if (message.content !== "" && currentPersonality.name !== "AI Assistant" && currentPersonality.type !== "wow") {
+  if (message.content !== "" && currentPersonality.type == "dnd" && !imageDescription) {
     dndData = await preprocessUserInput(message.content, nickname);
   } else {
     dndData = "No DnD Data Found";
@@ -86,7 +109,8 @@ async function handleMessage(message) {
       nickname,
       currentPersonality.name,
       userConfig.model,
-      userConfig.temperature
+      userConfig.temperature,
+      imageDescription
     );
 
     // Trim persona name from response text if it exists.
