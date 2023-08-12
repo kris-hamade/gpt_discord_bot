@@ -10,6 +10,7 @@ const lexicon = new natural.Lexicon("EN", "N", "NNP");
 const rules = new natural.RuleSet("EN");
 const tagger = new BrillPOSTagger(lexicon, rules);
 const Roll20Data = require('../models/roll20Data'); // assuming you save the schema in a file called roll20Data.js
+const { channel } = require("diagnostics_channel");
 
 async function loadNamesData() {
   const data = await Roll20Data.find({});
@@ -23,11 +24,11 @@ function isCustomToken(token, customNouns) {
   );
 }
 
-async function preprocessUserInput(input, nickname) {
+async function preprocessUserInput(input, nickname, channelId) {
   const customNouns = await loadNamesData();
   const data = {};
 
-  const userConfig = await getChatConfig(nickname);
+  const userConfig = await getChatConfig(nickname, channelId);
 
   const relevantTags =
     userConfig.model === "gpt-3" || userConfig.model === "gpt-3.5-turbo"

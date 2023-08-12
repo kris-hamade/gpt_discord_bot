@@ -250,7 +250,8 @@ async function getSizedHistory(
   haggleStatsPrompt,
   dndData,
   nickname,
-  personality
+  personality,
+  channelId
 ) {
   const promptLength = prompt.length;
   const personaLength = JSON.stringify(persona).length;
@@ -261,7 +262,7 @@ async function getSizedHistory(
     promptLength + personaLength + haggleStatsPromptLength + dndDataLength;
   const remainingSize = maxPromptSize - totalLength;
 
-  const historyItems = await getHistory(remainingSize, nickname, personality);
+  const historyItems = await getHistory(remainingSize, nickname, personality, channelId);
   return historyItems;
 }
 

@@ -6,7 +6,8 @@ const chatHistorySchema = new Schema({
   username: String,
   content: String,
   requestor: String,
-  timestamp: String
+  timestamp: String,
+  channelId: String,
 }, { collection: 'chatHistory' });
 
 const ChatHistory = mongoose.model('ChatHistory', chatHistorySchema);
