@@ -15,15 +15,16 @@ async function getImageDescription(imageUrl) {
                     'Content-Type': 'application/json'
                 },
                 params: {
-                    features: 'tags,objects,caption,denseCaptions,read,people',
+                    'visualFeatures': 'Categories',
+                    'details': 'Landmarks',
+                    'features': 'tags,objects,caption,denseCaptions,read,people',
                     'model-version': 'latest',
-                    language: 'en',
+                    'language': 'en',
                     'gender-neutral-caption': 'false',
                     'api-version': '2023-02-01-preview',
-                    domain: 'landmarks'
                 }
             });
-
+        //console.log("Response:", response.data);
         const transformedData = transformResponse(response.data);
         const confidenceThreshold = 0.5; // adjust as needed
         const filteredData = filterByConfidence(transformedData, confidenceThreshold);
@@ -40,7 +41,8 @@ function transformResponse(response) {
         captionResult,
         objectsResult,
         denseCaptionsResult,
-        tagsResult
+        tagsResult,
+        readResult
     } = response;
 
     // Extract caption details
@@ -76,14 +78,18 @@ function transformResponse(response) {
         };
     });
 
+    // Extract read result content
+    const readContent = readResult && readResult.content ? readResult.content : null;
+
     // Construct the result
     const result = {
         caption: caption,
         objects: objects,
         denseCaptions: denseCaptions,
-        tags: tags
+        tags: tags,
+        readContent: readContent
     };
-
+    console.log("Transformed data:", result);
     return result;
 }
 
@@ -104,7 +110,8 @@ function filterByConfidence(data, threshold = 0.5) {
         caption: filteredCaption,
         objects: filteredObjectTags,
         denseCaptions: filteredDenseCaptions,
-        tags: filteredTags
+        tags: filteredTags,
+        readContent: data.readContent
     };
 }
 

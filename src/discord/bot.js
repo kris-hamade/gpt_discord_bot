@@ -56,9 +56,9 @@ async function handleMessage(message) {
   // If there's an attachment with a URL
   if (message.attachments.size > 0 && message.attachments.first().url) {
     console.log(`processing ${message.attachments.first().url}`);
-    imageFullDescription = await getImageDescription(message.attachments.first().url);
-    imageDescription = imageFullDescription.denseCaptions.join(", ");
-    console.log(imageDescription);
+    imageDescription = await getImageDescription(message.attachments.first().url);
+    //imageDescription = imageFullDescription.denseCaptions.join(", ");
+    //console.log(imageDescription);
   }
 
 
@@ -67,9 +67,9 @@ async function handleMessage(message) {
   if (imgUrlPattern.test(message.content)) {
     const imgUrl = message.content.match(imgUrlPattern)[0];
     console.log(`processing ${imgUrl}`);
-    imageFullDescription = await getImageDescription(imgUrl);
-    imageDescription = imageFullDescription.denseCaptions.join(", ");
-    console.log(imageDescription);
+    imageDescription = await getImageDescription(imgUrl);
+    //imageDescription = imageFullDescription.denseCaptions.join(", ");
+    //console.log(imageDescription);
 
     // Remove the detected image URL from the message content
     message.content = message.content.replace(imgUrlPattern, '').trim();
