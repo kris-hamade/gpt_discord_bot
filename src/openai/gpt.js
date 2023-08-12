@@ -7,6 +7,7 @@ const { scheduleEvent } = require("../utils/eventScheduler.js");
 const mongoose = require('mongoose');
 const HaggleStats = require('../models/haggleStats');
 const { getImageDescription } = require("../utils/vision.js");
+const { stringify } = require("querystring");
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -121,6 +122,8 @@ async function generateResponse(
 }
 
 async function generateImageResponse(prompt, persona, model, temperature, imageDescription) {
+  const formattedDescription = formatImageDescription(imageDescription);
+
   let messages = [
     {
       role: "system",
@@ -128,14 +131,14 @@ async function generateImageResponse(prompt, persona, model, temperature, imageD
     },
     {
       role: "system",
-      content: `Given the following key elements from an image: ${imageDescription}. Please provide a comprehensive description of the image.`,
+      content: `Given the following key elements from an image: ${formattedDescription}. Please provide a comprehensive description of the image.`,
     },
     {
       role: "user",
       content: prompt,
     },
   ];
-
+  console.log(formattedDescription)
   try {
     const response = await openai.createChatCompletion({
       model: model,
@@ -159,6 +162,33 @@ async function generateImageResponse(prompt, persona, model, temperature, imageD
   }
 }
 
+function formatImageDescription(imageDescription) {
+  let descriptions = [];
+
+  // For the caption
+  if (imageDescription.caption) {
+    descriptions.push(`Caption: ${imageDescription.caption}`);
+  }
+
+  // For objects, denseCaptions, tags, etc. that are arrays
+  for (let key of Object.keys(imageDescription)) {
+    if (Array.isArray(imageDescription[key]) && imageDescription[key].length > 0) {
+      descriptions.push(`${capitalizeFirstLetter(key)}: ${imageDescription[key].join(', ')}`);
+    }
+  }
+
+  // For readContent or other string properties
+  if (imageDescription.readContent) {
+    descriptions.push(`Read Content: ${imageDescription.readContent}`);
+  }
+
+  return descriptions.join('. ');
+}
+
+// Helper function to capitalize the first letter of a string
+function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
 
 async function generateEventData(prompt, channelId, client) {
   try {
@@ -271,6 +301,34 @@ async function getHaggleStats() {
     console.error("Error fetching haggle stats from MongoDB:", error);
     throw error;  // propagate the error to be handled by the caller
   }
+}
+
+function formatImageDescription(imageDescription) {
+  let descriptions = [];
+
+  // For the caption
+  if (imageDescription.caption) {
+    descriptions.push(`Caption: ${imageDescription.caption}`);
+  }
+
+  // For objects, denseCaptions, tags, etc. that are arrays
+  for (let key of Object.keys(imageDescription)) {
+    if (Array.isArray(imageDescription[key]) && imageDescription[key].length > 0) {
+      descriptions.push(`${capitalizeFirstLetter(key)}: ${imageDescription[key].join(', ')}`);
+    }
+  }
+
+  // For readContent or other string properties
+  if (imageDescription.readContent) {
+    descriptions.push(`Read Content: ${imageDescription.readContent}`);
+  }
+
+  return descriptions.join('. ');
+}
+
+// Helper function to capitalize the first letter of a string
+function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
 module.exports = {
