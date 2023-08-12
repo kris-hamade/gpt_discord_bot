@@ -1,5 +1,5 @@
 const Discord = require("discord.js");
-const { generateEventData, generateImage, generateResponse } = require("../openai/gpt");
+const { generateEventData, generateImage, generateImageResponse, generateResponse } = require("../openai/gpt");
 const { preprocessUserInput } = require("../utils/preprocessor");
 const {
   buildHistory,
@@ -62,13 +62,17 @@ async function handleMessage(message) {
   }
 
 
-  // If an image URL is found in the message imageDescription
+  // If an image URL is found in the message content
   const imgUrlPattern = /https?:\/\/[^ "]+\.(?:png|jpg|jpeg|gif)/; // Adjust this regex pattern as needed
-  if (imgUrlPattern.test(message.imageDescription)) {
-    const imgUrl = message.imageDescription.match(imgUrlPattern)[0];
+  if (imgUrlPattern.test(message.content)) {
+    const imgUrl = message.content.match(imgUrlPattern)[0];
+    console.log(`processing ${imgUrl}`);
     imageFullDescription = await getImageDescription(imgUrl);
     imageDescription = imageFullDescription.denseCaptions.join(", ");
     console.log(imageDescription);
+
+    // Remove the detected image URL from the message content
+    message.content = message.content.replace(imgUrlPattern, '').trim();
   }
   // ============================ End of Image Processing =============================
 
@@ -102,16 +106,25 @@ async function handleMessage(message) {
   // Interaction with ChatGPT API starts here.
   try {
     // Generate response from ChatGPT API
-    let responseText = await generateResponse(
-      message.content,
-      currentPersonality,
-      dndData,
-      nickname,
-      currentPersonality.name,
-      userConfig.model,
-      userConfig.temperature,
-      imageDescription
-    );
+    if (imageDescription) {
+      responseText = await generateImageResponse(
+        message.content,
+        currentPersonality,
+        userConfig.model,
+        userConfig.temperature,
+        imageDescription
+      );
+    } else {
+      responseText = await generateResponse(
+        message.content,
+        currentPersonality,
+        dndData,
+        nickname,
+        currentPersonality.name,
+        userConfig.model,
+        userConfig.temperature
+      );
+    }
 
     // Trim persona name from response text if it exists.
     responseText = responseText.replace(

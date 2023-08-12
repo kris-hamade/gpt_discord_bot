@@ -74,7 +74,7 @@ async function generateResponse(
         },
         {
           role: "system",
-          content: "--YOU CAN SEE THIS PLEASE DESCRIBE IT-- " + "RESPOND TO THIS IMAGE AS IF YOU ARE SEEING IT WITH YOUR OWN EYES " + imageDescription + " --END THE DESCRIPTION OF WHAT YOU CAN SEE--",
+          content: "Given the following key elements from an image: " + imageDescription + " Please provide a comprehensive description of the image.",
         },
         {
           role: "system",
@@ -119,6 +119,46 @@ async function generateResponse(
     return errorMessage; // Return an empty string if an error occurs
   }
 }
+
+async function generateImageResponse(prompt, persona, model, temperature, imageDescription) {
+  let messages = [
+    {
+      role: "system",
+      content: await personaBuilder(persona),
+    },
+    {
+      role: "system",
+      content: `Given the following key elements from an image: ${imageDescription}. Please provide a comprehensive description of the image.`,
+    },
+    {
+      role: "user",
+      content: prompt,
+    },
+  ];
+
+  try {
+    const response = await openai.createChatCompletion({
+      model: model,
+      messages: messages,
+      temperature: temperature,
+    });
+
+    const message = response.data.choices[0].message.content;
+
+    // Log the tokens used
+    console.log("Prompt tokens used:", response.data.usage.prompt_tokens);
+    console.log("Completion tokens used:", response.data.usage.completion_tokens);
+    console.log("Total tokens used:", response.data.usage.total_tokens);
+
+    console.log("Generated message:", message); // Log the generated message for debugging
+
+    return message; // Return the generated message from the function
+  } catch (error) {
+    console.error("Error generating image response:", error);
+    return "Sorry, I couldn't generate a description for the image.";
+  }
+}
+
 
 async function generateEventData(prompt, channelId, client) {
   try {
@@ -236,5 +276,6 @@ async function getHaggleStats() {
 module.exports = {
   generateResponse,
   generateEventData,
-  generateImage
+  generateImage,
+  generateImageResponse
 };
