@@ -37,8 +37,9 @@ const client = new Discord.Client({
 
 async function handleMessage(message) {
   let nickname = message.guild ? (message.member ? message.member.nickname || message.author.username : message.author.username) : message.author.username;
+  let channelId = message.channel.id;
 
-  console.log(`Received a message from ${nickname} in ${message.channelId}`);
+  console.log(`Received a message from ${nickname} in ${channelId}`);
 
   // Ignore messages from other bots
   if (message.author.bot) return;
@@ -77,7 +78,10 @@ async function handleMessage(message) {
   // ============================ End of Image Processing =============================
 
   // Get the user's config from the database
-  let userConfig = await getChatConfig(nickname);
+  console.log("This channel id is 1", channelId)
+  // Ensure config exists for the user and channel before fetching it.
+  await setChatConfig(nickname, {}, channelId); // Pass an empty config, because your function will set defaults if not found
+  let userConfig = await getChatConfig(nickname, channelId);
 
   // Fetch the persona details based on the current personality in user's chat config
   let currentPersonality = await Personas.findOne({ name: userConfig.currentPersonality });
@@ -98,7 +102,7 @@ async function handleMessage(message) {
   // Also sends user nickname to retrieve data about their character
   let dndData;
   if (message.content !== "" && currentPersonality.type == "dnd" && !imageDescription) {
-    dndData = await preprocessUserInput(message.content, nickname);
+    dndData = await preprocessUserInput(message.content, nickname, channelId);
   } else {
     dndData = "No DnD Data Found";
   }
@@ -134,10 +138,10 @@ async function handleMessage(message) {
 
     // Chat History Use and Manipulation
     // Add the latest user message to the chat history
-    buildHistory("user", nickname, message.content);
+    buildHistory("user", nickname, message.content, nickname, channelId);
 
     // Add GPT Response to Chat History
-    buildHistory("assistant", currentPersonality.name, responseText, nickname);
+    buildHistory("assistant", currentPersonality.name, responseText, nickname, channelId);
 
     // Print trimmed response to discord
     return message.reply(responseText);
@@ -325,9 +329,10 @@ function start() {
             const foundPersona = await Personas.findOne({ name: selectedPersonaName });
 
             if (foundPersona) {
-              userConfig = await getChatConfig(interaction.member.nickname);
+              console.log("This channel id is 2", interaction.channelId)
+              userConfig = await getChatConfig(interaction.member.nickname, interaction.channelId);
               userConfig.currentPersonality = selectedPersonaName;
-              setChatConfig(interaction.member.nickname, userConfig);
+              setChatConfig(interaction.member.nickname, userConfig, interaction.channelId);
               await interaction.reply(`Switched to persona ${selectedPersonaName}.`);
             } else {
               await interaction.reply(`Error: Persona not found.`);
@@ -337,7 +342,8 @@ function start() {
 
         case 'model':
           const modelName = interaction.options.getString('name');
-          userConfig = await getChatConfig(interaction.member.nickname);
+          console.log("This channel id is 3", interaction.channelId)
+          userConfig = await getChatConfig(interaction.member.nickname, interaction.channelId);
 
           if (userConfig) {
             // Retrieve model from user's config and validate it
@@ -346,7 +352,7 @@ function start() {
               // Update the user's config with the new model
               userConfig.model = modelName;
               // Save the updated config
-              setChatConfig(interaction.member.nickname, userConfig);
+              setChatConfig(interaction.member.nickname, userConfig, interaction.channelId);
               await interaction.reply(`Switched to GPT model ${modelName}.`);
             } else {
               await interaction.reply(`Invalid GPT model: ${modelName}. Allowed models: ${allowedModels.join(", ")}`);
@@ -359,7 +365,8 @@ function start() {
 
         case 'temp':
           const newTemp = interaction.options.getNumber('value');
-          userConfig = await getChatConfig(interaction.member.nickname);
+          console.log("This channel id is 4", interaction.channelId)
+          userConfig = await getChatConfig(interaction.member.nickname, interaction.channelId);
 
           if (userConfig) {
             // Convert the input to a number in case it's a string
@@ -370,7 +377,7 @@ function start() {
               // Update the user's config with the new temperature
               userConfig.temperature = temperature;
               // Save the updated config
-              setChatConfig(interaction.member.nickname, userConfig);
+              setChatConfig(interaction.member.nickname, userConfig, interaction.channelId);
               await interaction.reply(`Set GPT temperature to ${newTemp}.`);
             } else {
               await interaction.reply(`Invalid GPT temperature: ${newTemp}. Temperature should be between 0 and 1.`);
@@ -387,14 +394,16 @@ function start() {
           break;
 
         case 'about':
-          userConfig = await getChatConfig(interaction.member.nickname);
+          console.log("This channel id is 5", interaction.channelId)
+          userConfig = await getChatConfig(interaction.member.nickname, interaction.channelId);
           configInfo = getConfigInformation(userConfig.model, userConfig.temperature);
           await interaction.reply(configInfo);
           break;
 
         case 'forgetme':
           const user = interaction.member.nickname;
-          clearUsersHistory(user)
+          console.log("forgetme", interaction.channelId)
+          clearUsersHistory(user, interaction.channelId)
             .then(() => {
               interaction.reply(`--Memory of ${user} Erased--`);
             })

@@ -2,10 +2,10 @@ const mongoose = require('mongoose');
 const moment = require("moment");
 const ChatHistory = require('../models/chatHistory');
 
-async function buildHistory(type, username, content, requestor) {
+async function buildHistory(type, username, content, requestor, channelId) {
   let timestamp = getCurrentTimestamp();
   try {
-    const chatHistory = new ChatHistory({ type, username, content, requestor, timestamp });
+    const chatHistory = new ChatHistory({ type, username, content, requestor, timestamp, channelId });
     await chatHistory.save();
     return chatHistory;
   } catch (error) {
@@ -28,15 +28,15 @@ async function getHistoryJson(size) {
   }
 }
 
-async function getHistory(size, nickname, personality) {
+async function getHistory(size, nickname, personality, channelId) {
   try {
     let historyDocs;
     if (size === "complete") {
       // Get all chat history related to the requester and personality from MongoDB
       historyDocs = await ChatHistory.find({
         $or: [
-          {requestor: nickname, username: nickname},
-          {type: "assistant", username: personality}
+          {requestor: nickname, username: nickname, channelId: channelId},
+          {type: "assistant", username: personality, channelId: channelId}
         ]
       });
     } else {
@@ -46,8 +46,8 @@ async function getHistory(size, nickname, personality) {
       // Get all chat history related to the requester and personality from MongoDB in reverse order (latest first)
       const allHistory = await ChatHistory.find({
         $or: [
-          {requestor: nickname, username: nickname},
-          {type: "assistant", username: personality}
+          {requestor: nickname, username: nickname, channelId: channelId},
+          {type: "assistant", username: personality, channelId: channelId}
         ]
       }).sort({_id: -1});
 
@@ -88,12 +88,13 @@ function formatChatHistory(chatHistory) {
 }
 
 
-async function clearUsersHistory(nickname) {
+async function clearUsersHistory(nickname, channelId) {
   try {
     await ChatHistory.deleteMany({
       $or: [
         {username: nickname},
-        {requestor: nickname}
+        {requestor: nickname},
+        {channelId: channelId}
       ]
     });
   } catch (error) {
