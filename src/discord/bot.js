@@ -156,18 +156,19 @@ const commands = [
       {
         name: 'list',
         description: 'List all available personas',
-        type: 1, // Discord's ApplicationCommandOptionType for SUB_COMMAND
+        type: 1,
       },
       {
         name: 'select',
         description: 'Change your current persona',
-        type: 1, // Discord's ApplicationCommandOptionType for SUB_COMMAND
+        type: 1,
         options: [
           {
             name: 'name',
-            type: 3, // Discord's ApplicationCommandOptionType for STRING
+            type: 3,
             description: 'The name of the persona',
             required: true,
+            // No choices here as it will be populated dynamically
           },
         ],
       },
@@ -266,6 +267,16 @@ function start() {
   client.on("ready", async () => {
     console.log(`Logged in as ${client.user.tag}!`);
 
+    // Fetch the personas, sort them alphabetically by name, and then populate the personaChoices array:
+    const availablePersonas = await Personas.find().sort({ name: 1 });
+    personaChoices = availablePersonas.map(persona => ({ name: persona.name, value: persona.name.toLowerCase() }));
+
+    // Add these choices to the 'select' subcommand configuration:
+    const selectSubCommand = commands.find(cmd => cmd.name === 'personas')
+      .options.find(opt => opt.name === 'select')
+      .options[0];
+    selectSubCommand.choices = personaChoices;
+
     loadJobsFromDatabase(client); // Load jobs when the bot is ready
 
     // Slash command registration
@@ -306,21 +317,20 @@ function start() {
 
             await interaction.reply(`Available personas are: ${personaNames.join(", ")}`);
           } else if (subCommand === 'select') {
-            // Switch to the selected persona
-            const newPersona = interaction.options.getString('name').toLowerCase();
+            const selectedPersonaName = interaction.options.getString('name').toLowerCase();
 
-            // Check if the persona exists in the database
-            const foundPersona = await Personas.findOne({ name: newPersona });
+            // Check if the persona exists in the database. 
+            // This step is more about verifying the consistency of data rather than validating user input, 
+            // as the choice provided by the user is always from a predefined list.
+            const foundPersona = await Personas.findOne({ name: selectedPersonaName });
 
             if (foundPersona) {
               userConfig = await getChatConfig(interaction.member.nickname);
-              userConfig.currentPersonality = newPersona;
-              setChatConfig(interaction.member.nickname, userConfig);  // Save the updated config
-              await interaction.reply(`Switched to persona ${newPersona}.`);
+              userConfig.currentPersonality = selectedPersonaName;
+              setChatConfig(interaction.member.nickname, userConfig);
+              await interaction.reply(`Switched to persona ${selectedPersonaName}.`);
             } else {
-              const availablePersonas = await Personas.find();
-              const personaNames = availablePersonas.map(persona => persona.name);
-              await interaction.reply(`Invalid persona: ${newPersona}. \n Use one of these\n  ${personaNames.join("\n  ")}`);
+              await interaction.reply(`Error: Persona not found.`);
             }
           }
           break;
@@ -499,6 +509,13 @@ function start() {
       console.log(`Error handling command: ${error}`);
     }
   });
+
+  function capitalizeFirstLetterOfEachWord(str) {
+    return str.replace(/\w\S*/g, function (txt) {
+      return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    });
+  }
+
 
   client.on("messageCreate", handleMessage);
 
