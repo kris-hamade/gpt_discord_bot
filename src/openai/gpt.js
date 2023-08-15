@@ -8,6 +8,9 @@ const mongoose = require('mongoose');
 const HaggleStats = require('../models/haggleStats');
 const { getImageDescription } = require("../utils/vision.js");
 const { stringify } = require("querystring");
+const leonardo = require('api')('@leonardoai/v1.0#28807z41owlgnis8jg');
+const axios = require('axios');
+
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -17,6 +20,8 @@ const openai = new OpenAIApi(configuration);
 // Set the max prompt size * 4 is about to calculate token size
 // characterLimit is set in the config.js file
 var maxPromptSize = 4000 * 4;
+
+leonardo_ai_auth = process.env.LEONARDO_AI_KEY
 
 // Set the max tokens to 1/4 of the max prompt size
 //const maxTokens = maxPromptSize / 4;
@@ -228,20 +233,81 @@ async function generateEventData(prompt, channelId, client) {
 
 async function generateImage(description) {
   console.log('Description:', description);
+
   try {
-    const response = await openai.createImage({
-      prompt: description,
-      n: 1,
-      size: "1024x1024",
+    const response = await axios.post('https://stablediffusionapi.com/api/v4/dreambooth', {
+      "key": `${process.env.STABLE_DIFFUSION_KEY}`,
+      "model_id": "realistic-vision-51",
+      "prompt": description,
+      "negative_prompt": "extra fingers, mutated hands, poorly drawn hands, poorly drawn face, deformed, ugly, blurry, bad anatomy, bad proportions, extra limbs, cloned face, skinny, glitchy, double torso, extra arms, extra hands, mangled fingers, missing lips, ugly face, distorted face, extra legs, robot eyes, bad teeth",
+      "width": "512",
+      "height": "512",
+      "samples": "4",
+      "num_inference_steps": "30",
+      "safety_checker": "no",
+      "enhance_prompt": "no",
+      "seed": null,
+      "guidance_scale": 7.5,
+      "multi_lingual": "no",
+      "panorama": "no",
+      "self_attention": "no",
+      "upscale": "no",
+      "embeddings_model": null,
+      "lora_model": null,
+      "tomesd": "yes",
+      "use_karras_sigmas": "yes",
+      "vae": null,
+      "lora_strength": null,
+      "scheduler": "UniPCMultistepScheduler",
+      "webhook": null,
+      "track_id": null
     });
 
-    const image = await response.data.data[0].url;
-    console.log("Generated image:", image); // Log the generated message for debugging
-    return image;
+
+    console.log(response.data);
+
+    let imageUrls = [];
+
+    if (response.data.status === 'processing') {
+      imageUrls = response.data.future_links;
+
+      // Wait for the first image to be available
+      await checkImageAvailability(imageUrls[0]);
+
+      return { imageUrls, eta: response.data.eta };
+    } else {
+      return { imageUrls: response.data.output, eta: 0 };
+    }
+
   } catch (error) {
     console.error("Error generating image:", error);
-    return null;
+    return { imageUrls: [], eta: -1 };
   }
+}
+
+const MAX_RETRIES = 60;  // Maximum number of times to check for image availability
+
+async function checkImageAvailability(url, attempt = 1) {
+  try {
+    const response = await axios.head(url); // Using HEAD request to check if resource exists without downloading it
+
+    // If successful response, return true indicating image is available
+    if (response.status === 200) {
+      return true;
+    }
+  } catch (error) {
+    // If a 404 error, it means image is not available yet, so retry
+    if (error.response && error.response.status === 404 && attempt <= MAX_RETRIES) {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          checkImageAvailability(url, attempt + 1).then(resolve).catch(reject);
+        }, 1000);  // Check every second
+      });
+    }
+  }
+
+  // If reached here, either max retries exceeded or some other error occurred
+  throw new Error('Failed to validate image availability.');
 }
 
 async function getSizedHistory(
