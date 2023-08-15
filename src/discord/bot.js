@@ -480,35 +480,33 @@ function start() {
 
         case 'image':
           try {
-            // Acknowledge the interaction
             await interaction.deferReply();
-
-            // Extract the description from the interaction
             const description = interaction.options.getString('description');
+            const { imageUrls, eta } = await generateImage(description);
 
-            // Call your generateImage function with the description provided
-            const imageUrl = await generateImage(description);
-
-            // Get the image using Axios and create an attachment using AttachmentBuilder
-            axios
-              .get(imageUrl, { responseType: 'arraybuffer' })
-              .then(response => {
-                const attachment = new Discord.AttachmentBuilder(response.data)
-                  .setName('image.jpg')
-                  .setDescription('Generated image');
-
-                // Assuming you want to send the attachment as part of a follow-up message
-                interaction.followUp({ content: `Generating image from description: ${description}`, files: [attachment] });
-              })
-              .catch(error => {
-                console.error(error);
-                interaction.followUp('Failed to get the generated image.');
-              });
+            // Add a delay if there's an ETA provided
+            setTimeout(() => {
+              Promise.all(imageUrls.map(url => axios.get(url, { responseType: 'arraybuffer' })))
+                .then(responses => {
+                  const attachments = responses.map(response =>
+                    new Discord.AttachmentBuilder(response.data)
+                      .setName('image.jpg')
+                      .setDescription('Generated image')
+                  );
+                  interaction.followUp({ content: `${description}`, files: attachments });
+                })
+                .catch(error => {
+                  console.error(error);
+                  interaction.followUp('Failed to get the generated images.');
+                });
+            }, eta * 1000);  // Convert ETA to milliseconds for setTimeout
           } catch (err) {
-            console.error(`Error generating image: ${err}`);
-            await interaction.followUp(`An error occurred while generating the image. Please try again later.`);
+            console.error(`Error generating images: ${err}`);
+            await interaction.followUp(`An error occurred while generating the images. Please try again later.`);
           }
           break;
+
+
 
 
         default:
