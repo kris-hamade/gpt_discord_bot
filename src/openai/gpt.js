@@ -270,15 +270,12 @@ async function generateImage(description) {
 
     if (response.data.status === 'processing') {
       imageUrls = response.data.future_links;
-
-      // Wait for the first image to be available
-      await checkImageAvailability(imageUrls[0]);
-
+      // Wait for all the images to be available
+      await checkAllImagesAvailability(imageUrls);
       return { imageUrls, eta: response.data.eta };
     } else {
       return { imageUrls: response.data.output, eta: 0 };
     }
-
   } catch (error) {
     console.error("Error generating image:", error);
     return { imageUrls: [], eta: -1 };
@@ -287,13 +284,18 @@ async function generateImage(description) {
 
 const MAX_RETRIES = 60;  // Maximum number of times to check for image availability
 
+async function checkAllImagesAvailability(urls) {
+  // Using Promise.all to wait for all images to become available
+  await Promise.all(urls.map(url => checkImageAvailability(url)));
+}
+
 async function checkImageAvailability(url, attempt = 1) {
   try {
     const response = await axios.head(url); // Using HEAD request to check if resource exists without downloading it
 
-    // If successful response, return true indicating image is available
+    // If successful response, resolve the promise indicating image is available
     if (response.status === 200) {
-      return true;
+      return;  // Resolve the promise
     }
   } catch (error) {
     // If a 404 error, it means image is not available yet, so retry
@@ -307,7 +309,7 @@ async function checkImageAvailability(url, attempt = 1) {
   }
 
   // If reached here, either max retries exceeded or some other error occurred
-  throw new Error('Failed to validate image availability.');
+  throw new Error('Failed to validate image availability for URL ' + url);
 }
 
 async function getSizedHistory(
