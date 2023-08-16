@@ -312,6 +312,69 @@ async function checkImageAvailability(url, attempt = 1) {
   throw new Error('Failed to validate image availability for URL ' + url);
 }
 
+async function generateLeonardoImage(description) {
+  console.log('Description:', description);
+
+  try {
+    // Authenticate with the SDK
+    leonardo.auth(leonardo_ai_auth);
+
+    // Create a generation
+    const generationResponse = await leonardo.createGeneration({
+      prompt: `${description}`,
+      modelId: '291be633-cb24-434f-898f-e662799936ad',
+      sd_version: 'v2',
+      width: 512,
+      height: 512,
+      num_images: 4,
+      promptMagic: true,
+      negative_prompt: 'extra fingers, mutated hands, poorly drawn hands, poorly drawn face, deformed, ugly, blurry, bad anatomy, bad proportions, extra limbs, cloned face, skinny, glitchy, double torso, extra arms, extra hands, mangled fingers, missing lips, ugly face, distorted face, extra legs, easynegative (epicnegative:0.9) ng_deepnegative_v1_75t badhandv4, logos, brands, icons, text'
+    });
+    //console.log(generationResponse)
+    const generationId = generationResponse.data.sdGenerationJob.generationId;
+
+    // Re-authenticate if needed (remove this line if not necessary)
+    leonardo.auth(leonardo_ai_auth);
+
+    // Get the generation by ID
+    const result = await getGenerationWhenComplete(generationId);
+    console.log(result)
+    const imageUrls = result.generations_by_pk.generated_images;    
+    console.log("Generated images:", imageUrls); // Log the generated URLs for debugging
+
+    return imageUrls;
+  } catch (error) {
+    console.error("Error generating image:", error);
+    return [];
+  }
+}
+
+async function getGenerationWhenComplete(generationId, delay = 2000, maxAttempts = 20) {
+  let attempts = 0;
+
+  async function tryGetGeneration() {
+      attempts++;
+
+      if (attempts > maxAttempts) {
+          throw new Error("Maximum attempts reached.");
+      }
+
+      // Assuming you're authenticating here
+      leonardo.auth(leonardo_ai_auth);
+
+      const response = await leonardo.getGenerationById({ id: generationId });
+      if (response.data.generations_by_pk.status !== "PENDING") {
+          return response.data;
+      }
+
+      // Wait for the delay duration and try again
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return tryGetGeneration();
+  }
+
+  return tryGetGeneration();
+}
+
 async function getSizedHistory(
   prompt,
   persona,
@@ -404,5 +467,6 @@ module.exports = {
   generateResponse,
   generateEventData,
   generateImage,
-  generateImageResponse
+  generateImageResponse,
+  generateLeonardoImage
 };
