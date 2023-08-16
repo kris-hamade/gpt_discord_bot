@@ -1,5 +1,5 @@
 const Discord = require("discord.js");
-const { generateEventData, generateImage, generateImageResponse, generateResponse } = require("../openai/gpt");
+const { generateEventData, generateImage, generateImageResponse, generateLeonardoImage, generateResponse } = require("../openai/gpt");
 const { preprocessUserInput } = require("../utils/preprocessor");
 const {
   buildHistory,
@@ -262,7 +262,20 @@ const commands = [
             required: true,
           },
         ],
-      }
+      },
+      {
+        name: 'leonardo',
+        description: 'Generate an image from a description using Leonardo.AI',
+        type: 1, // Discord's ApplicationCommandOptionType for SUB_COMMAND
+        options: [
+          {
+            name: 'description',
+            type: 3, // Discord's ApplicationCommandOptionType for STRING
+            description: 'The description of the image',
+            required: true,
+          },
+        ],
+      },
     ]
   }
 ]
@@ -480,9 +493,20 @@ function start() {
 
         case 'image':
           try {
+            const subCommand = interaction.options.getSubcommand();
             await interaction.deferReply();
             const description = interaction.options.getString('description');
-            const { imageUrls, eta } = await generateImage(description);
+
+            let imageUrls, eta; // Define here to use later
+
+            if (subCommand === 'leonardo') {
+              const imageObjects  = await generateLeonardoImage(description);
+              imageUrls = imageObjects.map(obj => obj.url);  // Extracting URLs
+              console.log(imageUrls);
+              eta = 0;  // You're setting the eta to 0 here. 
+          } else {
+              ({ imageUrls, eta } = await generateImage(description));
+          }
 
             // Add a delay if there's an ETA provided
             setTimeout(() => {
@@ -506,9 +530,6 @@ function start() {
           }
           break;
 
-
-
-
         default:
           await interaction.reply('Unknown command');
       }
@@ -516,13 +537,6 @@ function start() {
       console.log(`Error handling command: ${error}`);
     }
   });
-
-  function capitalizeFirstLetterOfEachWord(str) {
-    return str.replace(/\w\S*/g, function (txt) {
-      return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-    });
-  }
-
 
   client.on("messageCreate", handleMessage);
 
