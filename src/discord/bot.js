@@ -33,13 +33,15 @@ const client = new Discord.Client({
     Discord.GatewayIntentBits.DirectMessageReactions,
     Discord.GatewayIntentBits.DirectMessageTyping,
   ],
+  partials: [
+    Discord.Partials.Channel,
+    Discord.Partials.Message
+  ]
 });
 
 async function handleMessage(message) {
   let nickname = message.guild ? (message.member ? message.member.nickname || message.author.username : message.author.username) : message.author.username;
   let channelId = message.channel.id;
-
-  console.log(`Received a message from ${nickname} in ${channelId}`);
 
   // Ignore messages from other bots
   if (message.author.bot) return;
@@ -78,7 +80,6 @@ async function handleMessage(message) {
   // ============================ End of Image Processing =============================
 
   // Get the user's config from the database
-  console.log("This channel id is 1", channelId)
   // Ensure config exists for the user and channel before fetching it.
   await setChatConfig(nickname, {}, channelId); // Pass an empty config, because your function will set defaults if not found
   let userConfig = await getChatConfig(nickname, channelId);
@@ -326,6 +327,15 @@ function start() {
 
       switch (commandName) {
         case 'personas':
+          try {
+            //console.log("Interaction Username:", interaction.user.username)
+            console.log("Interaction Username user ", interaction.user.name)
+            console.log("Interaction tag", interaction.user.tag)
+            console.log("Interaction id", interaction.user.id)
+            console.log("interaction username ", interaction.user.username)
+          } catch (e) {
+            console.log(e)
+          }
           const subCommand = interaction.options.getSubcommand();
           if (subCommand === 'list') {
             // Fetch available personas from the database
@@ -342,10 +352,9 @@ function start() {
             const foundPersona = await Personas.findOne({ name: selectedPersonaName });
 
             if (foundPersona) {
-              console.log("This channel id is 2", interaction.channelId)
-              userConfig = await getChatConfig(interaction.member.nickname, interaction.channelId);
+              userConfig = await getChatConfig(interaction.user.username, interaction.channelId);
               userConfig.currentPersonality = selectedPersonaName;
-              setChatConfig(interaction.member.nickname, userConfig, interaction.channelId);
+              setChatConfig(interaction.user.username, userConfig, interaction.channelId);
               await interaction.reply(`Switched to persona ${selectedPersonaName}.`);
             } else {
               await interaction.reply(`Error: Persona not found.`);
@@ -355,8 +364,7 @@ function start() {
 
         case 'model':
           const modelName = interaction.options.getString('name');
-          console.log("This channel id is 3", interaction.channelId)
-          userConfig = await getChatConfig(interaction.member.nickname, interaction.channelId);
+          userConfig = await getChatConfig(interaction.user.username, interaction.channelId);
 
           if (userConfig) {
             // Retrieve model from user's config and validate it
@@ -365,21 +373,20 @@ function start() {
               // Update the user's config with the new model
               userConfig.model = modelName;
               // Save the updated config
-              setChatConfig(interaction.member.nickname, userConfig, interaction.channelId);
+              setChatConfig(interaction.user.username, userConfig, interaction.channelId);
               await interaction.reply(`Switched to GPT model ${modelName}.`);
             } else {
               await interaction.reply(`Invalid GPT model: ${modelName}. Allowed models: ${allowedModels.join(", ")}`);
             }
           }
           else {
-            await interaction.reply(`Could not retrieve configuration for user ${interaction.member.nickname}`);
+            await interaction.reply(`Could not retrieve configuration for user ${interaction.user.username}`);
           }
           break;
 
         case 'temp':
           const newTemp = interaction.options.getNumber('value');
-          console.log("This channel id is 4", interaction.channelId)
-          userConfig = await getChatConfig(interaction.member.nickname, interaction.channelId);
+          userConfig = await getChatConfig(interaction.user.username, interaction.channelId);
 
           if (userConfig) {
             // Convert the input to a number in case it's a string
@@ -390,14 +397,14 @@ function start() {
               // Update the user's config with the new temperature
               userConfig.temperature = temperature;
               // Save the updated config
-              setChatConfig(interaction.member.nickname, userConfig, interaction.channelId);
+              setChatConfig(interaction.user.username, userConfig, interaction.channelId);
               await interaction.reply(`Set GPT temperature to ${newTemp}.`);
             } else {
               await interaction.reply(`Invalid GPT temperature: ${newTemp}. Temperature should be between 0 and 1.`);
             }
           }
           else {
-            await interaction.reply(`Could not retrieve configuration for user ${interaction.member.nickname}`);
+            await interaction.reply(`Could not retrieve configuration for user ${interaction.user.username}`);
           }
           break;
 
@@ -407,14 +414,13 @@ function start() {
           break;
 
         case 'about':
-          console.log("This channel id is 5", interaction.channelId)
-          userConfig = await getChatConfig(interaction.member.nickname, interaction.channelId);
+          userConfig = await getChatConfig(interaction.user.username, interaction.channelId);
           configInfo = getConfigInformation(userConfig.model, userConfig.temperature);
           await interaction.reply(configInfo);
           break;
 
         case 'forgetme':
-          const user = interaction.member.nickname;
+          const user = interaction.user.username;
           console.log("forgetme", interaction.channelId)
           clearUsersHistory(user, interaction.channelId)
             .then(() => {
@@ -500,13 +506,13 @@ function start() {
             let imageUrls, eta; // Define here to use later
 
             if (subCommand === 'leonardo') {
-              const imageObjects  = await generateLeonardoImage(description);
+              const imageObjects = await generateLeonardoImage(description);
               imageUrls = imageObjects.map(obj => obj.url);  // Extracting URLs
               console.log(imageUrls);
               eta = 0;  // You're setting the eta to 0 here. 
-          } else {
+            } else {
               ({ imageUrls, eta } = await generateImage(description));
-          }
+            }
 
             // Add a delay if there's an ETA provided
             setTimeout(() => {
