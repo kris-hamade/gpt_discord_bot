@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const controller = require('./controllers');
-const { authMiddleware, getCurrentJournal, getCurrentHandouts } = require('./middlewares');
+const { authMiddleware, getCurrentJournal, getCurrentHandouts, verifyWebhookSecret } = require('./middlewares');
 const multer = require('multer');
 const upload = multer({ dest: './src/utils/data-uploads/' }); // This will save the uploaded files in an 'uploads' directory.
 
@@ -27,6 +27,9 @@ router.get('/currentHandouts', getCurrentHandouts);
 // POST Endpoints
 // Endpoint to replace Roll20 JSON Data, API key required
 router.post('/uploadRoll20Data/:type', authMiddleware, upload.single('file'), controller.uploadRoll20Data);
+
+// Webhook endpoint
+router.post('/webhook', authMiddleware, controller.webhookHandler);
 
 // Delete Endpoints
 // Clear chat history, API key required

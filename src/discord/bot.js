@@ -18,6 +18,7 @@ const cronstrue = require('cronstrue');
 const axios = require('axios');
 const Personas = require('../models/personas');
 const { getImageDescription } = require('../utils/vision');
+const WebhookSubs = require('../models/webhookSub');
 
 // Include the required packages for slash commands
 const { REST } = require('@discordjs/rest');
@@ -278,6 +279,45 @@ const commands = [
         ],
       },
     ]
+  },
+  {
+    name: 'webhook',
+    description: 'Subscribe to or unsubscribe from a webhook for the channel',
+    options: [
+      {
+        name: 'list',
+        description: 'List all available webhooks',
+        type: 1,  // Type 1 denotes a sub-command
+      },
+      {
+        name: 'subscribe',
+        description: 'Change webhook to subscribe to',
+        type: 1,
+        options: [
+          {
+            name: 'name',
+            type: 3,  // Type 3 denotes a STRING
+            description: 'The name of the webhook to subscribe to',
+            required: true,
+            // No choices here as it will be populated dynamically
+          },
+        ],
+      },
+      {
+        name: 'unsubscribe',
+        description: 'Unsubscribe from a webhook',
+        type: 1,
+        options: [
+          {
+            name: 'name',
+            type: 3,
+            description: 'The name of the webhook to unsubscribe from',
+            required: true,
+            // No choices here as it will be populated dynamically
+          },
+        ],
+      },
+    ],
   }
 ]
 
@@ -295,7 +335,27 @@ function start() {
       .options[0];
     selectSubCommand.choices = personaChoices;
 
-    loadJobsFromDatabase(client); // Load jobs when the bot is ready
+    // Fetch unique origins and sort them alphabetically
+    const availableWebhooks = await WebhookSubs.find().sort({ origin: 1 });
+    const uniqueOrigins = new Set(availableWebhooks.map(webhook => webhook.origin));
+    const webhookChoices = Array.from(uniqueOrigins).map(origin => ({ name: origin, value: origin.toLowerCase() }));
+
+    // Add these choices to the 'subscribe' subcommand
+    const subscribeWebhookSubCommand = commands.find(cmd => cmd.name === 'webhook')
+      .options.find(opt => opt.name === 'subscribe')
+      .options[0];
+    subscribeWebhookSubCommand.choices = webhookChoices;
+
+    // Add these choices to the 'unsubscribe' subcommand
+    const unsubscribeWebhookSubCommand = commands.find(cmd => cmd.name === 'webhook')
+      .options.find(opt => opt.name === 'unsubscribe')
+      .options[0];
+    unsubscribeWebhookSubCommand.choices = webhookChoices;
+
+
+    // Database Loading
+    // Load Scheduled Events from Database
+    loadJobsFromDatabase(client);
 
     // Slash command registration
     const rest = new REST({ version: '9' }).setToken(process.env.DISCORD_TOKEN);
@@ -326,7 +386,7 @@ function start() {
       const { commandName } = interaction;
 
       switch (commandName) {
-        case 'personas':
+        case 'personas': {
           try {
             //console.log("Interaction Username:", interaction.user.username)
             console.log("Interaction Username user ", interaction.user.name)
@@ -361,8 +421,9 @@ function start() {
             }
           }
           break;
+        }
 
-        case 'model':
+        case 'model': {
           const modelName = interaction.options.getString('name');
           userConfig = await getChatConfig(interaction.user.username, interaction.channelId);
 
@@ -383,8 +444,9 @@ function start() {
             await interaction.reply(`Could not retrieve configuration for user ${interaction.user.username}`);
           }
           break;
+        }
 
-        case 'temp':
+        case 'temp': {
           const newTemp = interaction.options.getNumber('value');
           userConfig = await getChatConfig(interaction.user.username, interaction.channelId);
 
@@ -407,19 +469,22 @@ function start() {
             await interaction.reply(`Could not retrieve configuration for user ${interaction.user.username}`);
           }
           break;
+        }
 
-        case 'uptime':
+        case 'uptime': {
           const uptime = getUptime();
           await interaction.reply(`Uptime: ${uptime}`);
           break;
+        }
 
-        case 'about':
+        case 'about': {
           userConfig = await getChatConfig(interaction.user.username, interaction.channelId);
           configInfo = getConfigInformation(userConfig.model, userConfig.temperature);
           await interaction.reply(configInfo);
           break;
+        }
 
-        case 'forgetme':
+        case 'forgetme': {
           const user = interaction.user.username;
           console.log("forgetme", interaction.channelId)
           clearUsersHistory(user, interaction.channelId)
@@ -430,8 +495,9 @@ function start() {
               interaction.reply(`Unable to erase memory of ${user}`);
             });
           break;
+        }
 
-        case 'forgetall':
+        case 'forgetall': {
           clearAllHistory()
             .then(() => {
               interaction.reply("-- Memory Erased --");
@@ -440,8 +506,9 @@ function start() {
               interaction.reply("Unable to erase memory");
             });
           break;
+        }
 
-        case 'events':
+        case 'events': {
           try {
             const events = await ScheduledEvent.find({});
             console.log("Fetched events:", events);
@@ -470,15 +537,16 @@ function start() {
             await interaction.reply('An error occurred while fetching the events.');
           }
           break;
+        }
 
-        case 'schedule':
+        case 'schedule': {
           const event = interaction.options.getString('event');
           interaction.reply("Generating Event Data: " + event);
           const reply = await generateEventData(event, interaction.channelId, client);
           await interaction.followUp(reply);
           break;
-
-        case 'deleteevent':
+        }
+        case 'deleteevent': {
           const eventName = interaction.options.getString('event');
           if (!eventName) {
             await interaction.reply(`Event name must be provided.`);
@@ -496,8 +564,9 @@ function start() {
             await interaction.reply('An error occurred while deleting the event.');
           }
           break;
+        }
 
-        case 'image':
+        case 'image': {
           try {
             const subCommand = interaction.options.getSubcommand();
             await interaction.deferReply();
@@ -535,6 +604,34 @@ function start() {
             await interaction.followUp(`An error occurred while generating the images. Please try again later.`);
           }
           break;
+        }
+
+        case 'webhook': {
+          const subCommand = interaction.options.getSubcommand();
+          const channelId = interaction.channelId;  // Get the channel ID from the interaction
+
+          if (subCommand === 'list') {
+            // Your existing code to list available webhooks
+          } else if (subCommand === 'subscribe') {
+            const selectedWebhookName = interaction.options.getString('name').toLowerCase();
+            // Your existing code to subscribe the channel
+          } else if (subCommand === 'unsubscribe') {
+            const webhookToUnsubscribe = interaction.options.getString('name').toLowerCase();
+
+            // Look up the subscription in your database
+            const foundWebhook = await WebhookSubs.findOne({ origin: webhookToUnsubscribe, channelId: channelId });
+
+            if (foundWebhook) {
+              // Remove the subscription
+              await WebhookSubs.deleteOne({ _id: foundWebhook._id });
+              await interaction.reply(`Successfully unsubscribed this channel from ${webhookToUnsubscribe}.`);
+            } else {
+              await interaction.reply(`Error: This channel is not subscribed to ${webhookToUnsubscribe}.`);
+            }
+          }
+          break;
+        }
+
 
         default:
           await interaction.reply('Unknown command');
@@ -548,7 +645,21 @@ function start() {
 
   client.login(process.env.DISCORD_TOKEN);
 }
+
+async function pingChannel(channelId, message) {
+  try {
+    // Fetch the channel by its ID
+    const channel = await client.channels.fetch(channelId);
+
+    // Send a message with an '@everyone' ping and your provided message.
+    await channel.send(`${message}`);
+    console.log(`Sent a ping in channel ${channelId}: ${message}`);
+  } catch (error) {
+    console.error(`Error pinging everyone in channel ${channelId}: ${error}`);
+  }
+}
+
 module.exports = {
-  client,
-  start
+  start,
+  pingChannel
 };
