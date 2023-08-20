@@ -1,6 +1,6 @@
 const Roll20Data = require("../models/roll20Data");
 
-const API_KEY = process.env.API_KEY; // Make sure to add your API key to your .env file
+const API_KEY = process.env.API_KEY;
 
 exports.errorHandler = function (err, req, res, next) {
     console.error(err.stack);
