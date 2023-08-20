@@ -10,6 +10,7 @@ const express = require("express");
 const app = express();
 const routes = require("./src/api/routes");
 const { errorHandler } = require("./src/api/middlewares");
+const { loadWebhookSubs } = require('./src/utils/webhook');
 
 // Make sure the archive directory exists if not create it
 if (!fs.existsSync(archiveDirectory)) {
@@ -33,6 +34,9 @@ try {
   console.error('Error connecting to Database', err);
   process.exit(1);
 }
+
+// Load Webhook Subscriptions from Database
+loadWebhookSubs();
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Server running on port ${port}`));
