@@ -18,14 +18,29 @@ async function processWebhook(data) {
     if (matchingSubs.length > 0) {
         console.log(`Processing webhook for origin: ${data.origin}`);
 
+        // Loop through each subscribed channel
         for (const matchingSub of matchingSubs) {
             const channelId = matchingSub.channelId;
+            let messageContent;
 
-            const messageContent = data.origin === "overseer"
-                ? `${data.event}\n${data.subject}\n${data.image}`
-                : data.subject;
-
-            await pingChannel(channelId, messageContent);
+            // Check the origin and create the message content accordingly
+            switch (data.origin) {
+                case "overseer":
+                    messageContent = `${data.event}\n${data.subject}\n${data.image}`;
+                    await pingChannel(channelId, messageContent);
+                    break;
+                case "cve-aggregator":
+                    // Loop through each CVE entry in data.content
+                    for (const cve of data.content) {
+                        messageContent = `**CVE ID:** ${cve.CVE_ID}\n**Published Date:** ${cve.Published_Date}\n**Last Modified Date:** ${cve.Last_Modified_Date}\n**Description:** ${cve.Description}`;
+                        await pingChannel(channelId, messageContent);
+                    }
+                    break;
+                default:
+                    messageContent = data.subject || "Unknown subject";
+                    await pingChannel(channelId, messageContent);
+                    break;
+            }
         }
     } else {
         console.log(`No subscription found for origin: ${data.origin}`);
