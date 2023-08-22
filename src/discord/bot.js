@@ -608,21 +608,36 @@ function start() {
 
         case 'webhook': {
           const subCommand = interaction.options.getSubcommand();
-          const channelId = interaction.channelId;  // Get the channel ID from the interaction
+          const channelId = interaction.channelId;
 
           if (subCommand === 'list') {
             // Your existing code to list available webhooks
           } else if (subCommand === 'subscribe') {
             const selectedWebhookName = interaction.options.getString('name').toLowerCase();
-            // Your existing code to subscribe the channel
+
+            // Check if already subscribed
+            const alreadySubscribed = await WebhookSubs.findOne({ origin: selectedWebhookName, channelId: channelId });
+            if (alreadySubscribed) {
+              await interaction.reply(`This channel is already subscribed to ${selectedWebhookName}.`);
+              return;
+            }
+
+            // Subscribe to the webhook
+            const newSubscription = new WebhookSubs({
+              origin: selectedWebhookName,
+              channelId: channelId,
+              // Any other fields you want to store
+            });
+
+            await newSubscription.save();
+            await interaction.reply(`Successfully subscribed this channel to ${selectedWebhookName}.`);
+
           } else if (subCommand === 'unsubscribe') {
             const webhookToUnsubscribe = interaction.options.getString('name').toLowerCase();
 
-            // Look up the subscription in your database
             const foundWebhook = await WebhookSubs.findOne({ origin: webhookToUnsubscribe, channelId: channelId });
 
             if (foundWebhook) {
-              // Remove the subscription
               await WebhookSubs.deleteOne({ _id: foundWebhook._id });
               await interaction.reply(`Successfully unsubscribed this channel from ${webhookToUnsubscribe}.`);
             } else {
