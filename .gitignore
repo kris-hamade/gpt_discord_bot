@@ -95,3 +95,7 @@ src/utils/data-misc/chathistory.json
 
 # data-archive files
 /src/utils/data-archive/*
+
+# yarn
+yarn.lock
+.yarn
