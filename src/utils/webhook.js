@@ -44,6 +44,19 @@ async function processWebhook(data) {
         }
     } else {
         console.log(`No subscription found for origin: ${data.origin}`);
+
+        // If the incoming webhook has an origin, add a default entry
+        if (data.origin) {
+            const newSubscription = new WebhookSubs({
+                origin: data.origin,
+                channelId: 666,  // default channelId
+                // Any other fields you want to store
+            });
+
+            await newSubscription.save();
+            console.log(`Added a default subscription for origin: ${data.origin}`);
+        }
+
         return null;
     }
 }
