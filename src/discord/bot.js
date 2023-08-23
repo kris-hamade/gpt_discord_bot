@@ -19,6 +19,7 @@ const axios = require('axios');
 const Personas = require('../models/personas');
 const { getImageDescription } = require('../utils/vision');
 const WebhookSubs = require('../models/webhookSub');
+const { loadWebhookSubs } = require('../utils/webhook');
 
 // Include the required packages for slash commands
 const { REST } = require('@discordjs/rest');
@@ -644,6 +645,7 @@ function start() {
               await interaction.reply(`Error: This channel is not subscribed to ${webhookToUnsubscribe}.`);
             }
           }
+          loadWebhookSubs();
           break;
         }
 
@@ -665,7 +667,10 @@ async function pingChannel(channelId, message) {
   try {
     // Fetch the channel by its ID
     const channel = await client.channels.fetch(channelId);
-
+    if (!channel || channel == "666") {
+      console.error(`Channel with ID ${channelId} does not exist.`);
+      return;
+    }
     // Send a message with an '@everyone' ping and your provided message.
     await channel.send(`${message}`);
     console.log(`Sent a ping in channel ${channelId}: ${message}`);
