@@ -32,7 +32,7 @@ async function processWebhook(data) {
                 case "cve-aggregator":
                     // Loop through each CVE entry in data.content
                     for (const cve of data.content) {
-                        messageContent = `**CVE ID:** ${cve.CVE_ID}\n**Published Date:** ${cve.Published_Date}\n**Last Modified Date:** ${cve.Last_Modified_Date}\n**Description:** ${cve.Description}\n\n`;
+                        messageContent = `\n.-\n**CVE ID:** ${cve.CVE_ID}\n**Published Date:** ${cve.Published_Date}\n**Last Modified Date:** ${cve.Last_Modified_Date}\n**Description:** ${cve.Description}\n.-\n`;messageContent = `\`\`\`\nCVE ID: ${cve.CVE_ID}\nPublished Date: ${cve.Published_Date}\nLast Modified Date: ${cve.Last_Modified_Date}\nDescription: ${cve.Description}\n\`\`\``;
                         await pingChannel(channelId, messageContent);
                     }
                     break;
