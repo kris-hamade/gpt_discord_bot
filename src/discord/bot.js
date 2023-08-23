@@ -1,4 +1,5 @@
 const Discord = require("discord.js");
+const client = require("./client")
 const { generateEventData, generateImage, generateImageResponse, generateLeonardoImage, generateResponse } = require("../openai/gpt");
 const { preprocessUserInput } = require("../utils/preprocessor");
 const {
@@ -24,22 +25,6 @@ const { loadWebhookSubs } = require('../utils/webhook');
 // Include the required packages for slash commands
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
-
-// Create a new Discord client
-const client = new Discord.Client({
-  intents: [
-    Discord.GatewayIntentBits.Guilds,
-    Discord.GatewayIntentBits.GuildMessages,
-    Discord.GatewayIntentBits.MessageContent,
-    Discord.GatewayIntentBits.DirectMessages,
-    Discord.GatewayIntentBits.DirectMessageReactions,
-    Discord.GatewayIntentBits.DirectMessageTyping,
-  ],
-  partials: [
-    Discord.Partials.Channel,
-    Discord.Partials.Message
-  ]
-});
 
 async function handleMessage(message) {
   let nickname = message.guild ? (message.member ? message.member.nickname || message.author.username : message.author.username) : message.author.username;
@@ -663,23 +648,6 @@ function start() {
   client.login(process.env.DISCORD_TOKEN);
 }
 
-async function pingChannel(channelId, message) {
-  try {
-    // Fetch the channel by its ID
-    const channel = await client.channels.fetch(channelId);
-    if (!channel || channel == "666") {
-      console.error(`Channel with ID ${channelId} does not exist.`);
-      return;
-    }
-    // Send a message with an '@everyone' ping and your provided message.
-    await channel.send(`${message}`);
-    console.log(`Sent a ping in channel ${channelId}: ${message}`);
-  } catch (error) {
-    console.error(`Error pinging everyone in channel ${channelId}: ${error}`);
-  }
-}
-
 module.exports = {
   start,
-  pingChannel
 };

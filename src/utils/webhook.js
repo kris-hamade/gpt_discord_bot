@@ -1,5 +1,5 @@
 const WebhookSubs = require('../models/webhookSub');
-const { pingChannel } = require('../discord/bot');
+const client = require('../discord/client');
 
 let subs = [];
 
@@ -58,6 +58,22 @@ async function processWebhook(data) {
         }
 
         return null;
+    }
+}
+
+async function pingChannel(channelId, message) {
+    try {
+        // Fetch the channel by its ID
+        const channel = await client.channels.fetch(channelId);
+        if (!channel || channel == "666") {
+            console.error(`Channel with ID ${channelId} does not exist.`);
+            return;
+        }
+        // Send a message with an '@everyone' ping and your provided message.
+        await channel.send(`${message}`);
+        console.log(`Sent a ping in channel ${channelId}: ${message}`);
+    } catch (error) {
+        console.error(`Error pinging everyone in channel ${channelId}: ${error}`);
     }
 }
 
