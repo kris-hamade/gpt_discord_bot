@@ -29,38 +29,29 @@ async function processWebhook(data) {
                     messageContent = `${data.event}\n${data.subject}\n${data.image}`;
                     await pingChannel(channelId, messageContent);
                     break;
-                case "cve-aggregator":
-                    let messageContents = [];
-                    for (const cve of data.content.vulnerabilities) {
-                        const singleMessageContent =
-                            `\`\`\`
-                    CVE ID: ${cve.CVE_ID}
-                    Status: ${cve.Status}
-                    Published Date: ${cve.Published_Date}
-                    Last Modified Date: ${cve.Last_Modified_Date}
-                    Description: ${cve.Description}
-                    CVSS v3 Score: ${cve.CVSS_v3_Score}
-                    CVSS v3 Severity: ${cve.CVSS_v3_Severity}
-                    CVSS v2 Score: ${cve.CVSS_v2_Score}
-                    \`\`\``;
-
-                        messageContents.push(singleMessageContent);
-                    }
-
-                    // Chunk messages if needed (Discord's limit is 2000 chars)
-                    let chunkedMessage = '';
-                    for (const content of messageContents) {
-                        if ((chunkedMessage.length + content.length) > 1900) { // give some buffer
-                            await pingChannel(channelId, chunkedMessage);
-                            chunkedMessage = '';
+                    case "cve-aggregator":
+                        let messageContents = [];
+                        for (const cve of data.content.vulnerabilities) {
+                            const singleMessageContent = 
+                    `\`\`\`CVE ID: ${cve.CVE_ID}\n Status: ${cve.Status} \n Published Date: ${cve.Published_Date} \n Last Modified Date: ${cve.Last_Modified_Date} \n Description: ${cve.Description} \n CVSS v3 Score: ${cve.CVSS_v3_Score} \n CVSS v3 Severity: ${cve.CVSS_v3_Severity} \n CVSS v2 Score: ${cve.CVSS_v2_Score} \`\`\``;
+                    
+                            messageContents.push(singleMessageContent);
                         }
-                        chunkedMessage += content + '\n';
-                    }
-
-                    if (chunkedMessage) {
-                        await pingChannel(channelId, chunkedMessage);
-                    }
-                    break;
+                    
+                        // Chunk messages if needed (Discord's limit is 2000 chars)
+                        let chunkedMessage = '';
+                        for (const content of messageContents) {
+                            if ((chunkedMessage.length + content.length) > 1900) { // give some buffer
+                                await pingChannel(channelId, chunkedMessage);
+                                chunkedMessage = '';
+                            }
+                            chunkedMessage += content + '\n';
+                        }
+                        
+                        if (chunkedMessage) {
+                            await pingChannel(channelId, chunkedMessage);
+                        }
+                        break;
             }
         }
     } else {
