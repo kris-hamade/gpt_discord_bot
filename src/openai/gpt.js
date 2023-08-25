@@ -126,6 +126,40 @@ async function generateResponse(
   }
 }
 
+async function generateVulnerabilityReport(vulnerabilities) {
+  let messages = [
+    {
+      role: "system",
+      content: "You are a systems security engineer specializing in vulnerability assessment. You will be provided data from a NIST API query containing recent CVE entries. Please review the data and provide a brief report highlighting the vulnerabilities you consider to be the most critical based on factors like exploitability, impact, and the types of systems affected.",
+    },
+    {
+      role: "user",
+      content: vulnerabilities,
+    }
+  ];
+
+  try {
+    const response = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo-16k",
+      messages: messages,
+      temperature: 0.6,
+    });
+
+    const message = response.data.choices[0].message.content;
+
+    // Log the tokens used
+    console.log("Prompt tokens used:", response.data.usage.prompt_tokens);
+    console.log("Completion tokens used:", response.data.usage.completion_tokens);
+    console.log("Total tokens used:", response.data.usage.total_tokens);
+
+    console.log("Generated message:", message); // Log the generated message for debugging
+    return message; // Return the generated message from the function
+  } catch (error) {
+    console.error("Error generating full vulnerability report response:", error);
+    return "Sorry, I couldn't generate a full vulnerability report based on the CVEs.";
+  }
+}
+
 async function generateImageResponse(prompt, persona, model, temperature, imageDescription) {
   const formattedDescription = formatImageDescription(imageDescription);
 
@@ -339,7 +373,7 @@ async function generateLeonardoImage(description) {
     // Get the generation by ID
     const result = await getGenerationWhenComplete(generationId);
     console.log(result)
-    const imageUrls = result.generations_by_pk.generated_images;    
+    const imageUrls = result.generations_by_pk.generated_images;
     console.log("Generated images:", imageUrls); // Log the generated URLs for debugging
 
     return imageUrls;
@@ -353,23 +387,23 @@ async function getGenerationWhenComplete(generationId, delay = 2000, maxAttempts
   let attempts = 0;
 
   async function tryGetGeneration() {
-      attempts++;
+    attempts++;
 
-      if (attempts > maxAttempts) {
-          throw new Error("Maximum attempts reached.");
-      }
+    if (attempts > maxAttempts) {
+      throw new Error("Maximum attempts reached.");
+    }
 
-      // Assuming you're authenticating here
-      leonardo.auth(leonardo_ai_auth);
+    // Assuming you're authenticating here
+    leonardo.auth(leonardo_ai_auth);
 
-      const response = await leonardo.getGenerationById({ id: generationId });
-      if (response.data.generations_by_pk.status !== "PENDING") {
-          return response.data;
-      }
+    const response = await leonardo.getGenerationById({ id: generationId });
+    if (response.data.generations_by_pk.status !== "PENDING") {
+      return response.data;
+    }
 
-      // Wait for the delay duration and try again
-      await new Promise(resolve => setTimeout(resolve, delay));
-      return tryGetGeneration();
+    // Wait for the delay duration and try again
+    await new Promise(resolve => setTimeout(resolve, delay));
+    return tryGetGeneration();
   }
 
   return tryGetGeneration();
@@ -468,5 +502,6 @@ module.exports = {
   generateEventData,
   generateImage,
   generateImageResponse,
-  generateLeonardoImage
+  generateLeonardoImage,
+  generateVulnerabilityReport
 };
