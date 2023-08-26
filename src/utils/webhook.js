@@ -1,8 +1,11 @@
 const WebhookSubs = require('../models/webhookSub');
 const client = require('../discord/client');
-const { generateVulnerabilityReport } = require('../openai/gpt')
+const { generateVulnerabilityReport, generateWebhookReport } = require('../openai/gpt')
 
 let subs = [];
+
+const processedCVEsAggregator = {};
+let processedCVEsFullReport = {};
 
 async function loadWebhookSubs() {
     subs = await WebhookSubs.find({});
@@ -11,90 +14,131 @@ async function loadWebhookSubs() {
 }
 
 async function processWebhook(data) {
-    console.log(data);
+    console.log("Received data:", JSON.stringify(data));
 
+    const matchingChannelIds = [];
+
+    // Re-fetch from the database to keep in sync
+    await loadWebhookSubs();
     // Find all subscriptions that match the received webhook's origin
     const matchingSubs = subs.filter(sub => sub.origin === data.origin);
 
+    console.log(`Processing webhook for origin: ${data.origin}`);
+
+    for (const matchingSub of matchingSubs) {
+        const channelId = matchingSub.channelId;
+        matchingChannelIds.push(channelId);
+    }
+
     if (matchingSubs.length > 0) {
-        console.log(`Processing webhook for origin: ${data.origin}`);
-
-        // Loop through each subscribed channel
-        for (const matchingSub of matchingSubs) {
-            const channelId = matchingSub.channelId;
-            let messageContent;
-
-            // Check the origin and create the message content accordingly
+        try {
             switch (data.origin) {
                 case "overseer":
                     messageContent = `${data.event}\n${data.subject}\n${data.image}`;
-                    await pingChannel(channelId, messageContent);
+                    await pingChannels(matchingChannelIds, messageContent);
                     break;
                 case "cve-aggregator":
-                    let messageContents = [];
+                    const messageContents = []; // Local message buffer
                     for (const cve of data.content.vulnerabilities) {
-                        const singleMessageContent =
-                            `\`\`\`CVE ID: ${cve.CVE_ID}\n Status: ${cve.Status} \n Published Date: ${cve.Published_Date} \n Last Modified Date: ${cve.Last_Modified_Date} \n Description: ${cve.Description} \n CVSS v3 Score: ${cve.CVSS_v3_Score} \n CVSS v3 Severity: ${cve.CVSS_v3_Severity} \n CVSS v2 Score: ${cve.CVSS_v2_Score} \`\`\``;
-
-                        messageContents.push(singleMessageContent);
-                    }
-
-                    // Chunk messages if needed (Discord's limit is 2000 chars)
-                    let chunkedMessage = '';
-                    for (const content of messageContents) {
-                        if ((chunkedMessage.length + content.length) > 1900) { // give some buffer
-                            await pingChannel(channelId, chunkedMessage);
-                            chunkedMessage = '';
+                        if (!processedCVEsAggregator[cve.CVE_ID]) { // Note the different variable
+                            const singleMessageContent = `\`\`\`CVE ID: ${cve.CVE_ID}\nStatus: ${cve.Status || "undefined"}\nPublished Date: ${cve.Published_Date}\nLast Modified Date: ${cve.Last_Modified_Date}\nDescription: ${cve.Description}\nCVSS v3 Score: ${cve.CVSS_v3_Score || "undefined"}\nCVSS v3 Severity: ${cve.CVSS_v3_Severity || "undefined"}\nCVSS v2 Score: ${cve.CVSS_v2_Score || "undefined"}\`\`\``;
+                            messageContents.push(singleMessageContent);
+                            processedCVEsAggregator[cve.CVE_ID] = true; // Mark as processed
                         }
-                        chunkedMessage += content + '\n';
                     }
-
-                    if (chunkedMessage) {
-                        await pingChannel(channelId, chunkedMessage);
+                    if (messageContents.length > 0) {
+                        await sendChunkedMessages(matchingChannelIds, messageContents);
                     }
                     break;
                 case "cve-full-report":
-                    const allCVEs = data.content.vulnerabilities.map(cve => {
+                    processedCVEsFullReport = {}; // in here temporarily
+                    const newCVEs = data.content.vulnerabilities.filter(cve => !processedCVEsFullReport[cve.CVE_ID]);
+
+                    const allCVEs = newCVEs.map(cve => {
+                        processedCVEsFullReport[cve.CVE_ID] = true;
                         return `CVE ID: ${cve.CVE_ID}\nStatus: ${cve.Status}\nPublished Date: ${cve.Published_Date}\nLast Modified Date: ${cve.Last_Modified_Date}\nDescription: ${cve.Description}\nCVSS v3 Score: ${cve.CVSS_v3_Score}\nCVSS v3 Severity: ${cve.CVSS_v3_Severity}\nCVSS v2 Score: ${cve.CVSS_v2_Score}`;
                     }).join('\n\n');
 
-                    const report = await generateVulnerabilityReport(allCVEs);
-                    console.log("THIS IS THE REPORT, ", report)
-                    await pingChannel(channelId, report)
+                    if (allCVEs) {
+                        const report = await generateVulnerabilityReport(allCVEs);
+                        await sendChunkedMessages(matchingChannelIds, [report]);
+                    }
+                    break;
+                case undefined:
+                    console.log("Received an undefined origin.");
+                    const report = await generateWebhookReport(data);
+                    await sendChunkedMessages(matchingChannelIds, [report]);
+                    break;
             }
+        } catch (error) {
+            console.error(`Error processing webhook: ${error}`);
         }
     } else {
         console.log(`No subscription found for origin: ${data.origin}`);
 
-        // If the incoming webhook has an origin, add a default entry
         if (data.origin) {
-            const newSubscription = new WebhookSubs({
-                origin: data.origin,
-                channelId: 666,  // default channelId
-                // Any other fields you want to store
-            });
+            try {
+                const newSubscription = new WebhookSubs({
+                    origin: data.origin,
+                    channelId: 666,  // default channelId
+                });
 
-            await newSubscription.save();
-            console.log(`Added a default subscription for origin: ${data.origin}`);
+                await newSubscription.save();
+                console.log(`Added a default subscription for origin: ${data.origin}`);
+            } catch (error) {
+                console.error(`Error saving new subscription: ${error}`);
+            }
         }
-
-        return null;
     }
 }
 
-async function pingChannel(channelId, message) {
-    try {
-        // Fetch the channel by its ID
-        const channel = await client.channels.fetch(channelId);
-        if (!channel || channel == "666") {
-            console.error(`Channel with ID ${channelId} does not exist.`);
-            return;
+async function sendChunkedMessages(matchingChannelIds, messageContents) {
+    if (typeof messageContents === 'string') {
+        messageContents = [messageContents];
+    }
+
+    let chunkedMessage = '';
+    for (const content of messageContents) {
+        if (content.length > 2000) {
+            // Split the large content into multiple pieces and send each separately
+            let startIndex = 0;
+            while (startIndex < content.length) {
+                const subContent = content.substring(startIndex, startIndex + 2000);
+                await pingChannels(matchingChannelIds, subContent);
+                startIndex += 2000;
+            }
+        } else {
+            if ((chunkedMessage.length + content.length + 1) > 2000) { // give some buffer (+1 for the newline)
+                await pingChannels(matchingChannelIds, chunkedMessage.trim()); // Remove any trailing newline
+                chunkedMessage = '';
+            }
+            chunkedMessage += content + '\n';
         }
-        // Send a message with an '@everyone' ping and your provided message.
-        await channel.send(`${message}`);
-        console.log(`Sent a ping in channel ${channelId}: ${message}`);
-    } catch (error) {
-        console.error(`Error pinging everyone in channel ${channelId}: ${error}`);
+    }
+
+    if (chunkedMessage.trim()) {  // Remove any trailing newline
+        await pingChannels(matchingChannelIds, chunkedMessage.trim());
+    }
+}
+
+async function pingChannels(matchingChannelIds, message) {
+    if (!message) {
+        console.warn("Attempted to send an empty message. Skipping.");
+        return;
+    }
+
+    for (const channelId of matchingChannelIds) {
+        try {
+            const channel = await client.channels.fetch(channelId);
+            if (!channel) {
+                console.error(`Channel with ID ${channelId} does not exist.`);
+                continue;
+            }
+            await channel.send(message);
+            console.log(`Sent a ping in channel ${channelId}: ${message}`);
+        } catch (error) {
+            console.error(`Error pinging everyone in channel ${channelId}: ${error}`);
+        }
     }
 }
 

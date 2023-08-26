@@ -130,7 +130,7 @@ async function generateVulnerabilityReport(vulnerabilities) {
   let messages = [
     {
       role: "system",
-      content: "You are a systems security engineer specializing in vulnerability assessment. You will be provided data from a NIST API query containing recent CVE entries. Please review the data and provide a brief report highlighting the vulnerabilities you consider to be the most critical based on factors like exploitability, impact, and the types of systems affected.",
+      content: "You are a systems security engineer specializing in vulnerability assessment. You will be provided data from a NIST API query containing recent CVE entries. Please review the data and provide a brief report highlighting the vulnerabilities you consider to be the most critical based on factors like exploitability, impact, and the types of systems affected. Return the report in a format that will look good in Discord Markdown messages. Wrap each listed vulnerablity with three backticks to make them look like code blocks.",
     },
     {
       role: "user",
@@ -157,6 +157,40 @@ async function generateVulnerabilityReport(vulnerabilities) {
   } catch (error) {
     console.error("Error generating full vulnerability report response:", error);
     return "Sorry, I couldn't generate a full vulnerability report based on the CVEs.";
+  }
+}
+
+async function generateWebhookReport(message) {
+  let messages = [
+    {
+      role: "system",
+      content: "You are receiving a webhook. Please describe what the source is and your assessment of what the data is that is being received. Use your best judgement to draw conclusions and build a report.",
+    },
+    {
+      role: "user",
+      content: message,
+    }
+  ];
+
+  try {
+    const response = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo-16k",
+      messages: messages,
+      temperature: 0.6,
+    });
+
+    const message = response.data.choices[0].message.content;
+
+    // Log the tokens used
+    console.log("Prompt tokens used:", response.data.usage.prompt_tokens);
+    console.log("Completion tokens used:", response.data.usage.completion_tokens);
+    console.log("Total tokens used:", response.data.usage.total_tokens);
+
+    console.log("Generated message:", message); // Log the generated message for debugging
+    return message; // Return the generated message from the function
+  } catch (error) {
+    console.error("Error generating webhook report response:", error);
+    return "Sorry, I couldn't generate a webhook report based on the data received";
   }
 }
 
@@ -503,5 +537,6 @@ module.exports = {
   generateImage,
   generateImageResponse,
   generateLeonardoImage,
-  generateVulnerabilityReport
+  generateVulnerabilityReport,
+  generateWebhookReport
 };
