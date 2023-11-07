@@ -15,33 +15,42 @@ async function getChatConfig(username, channelID) {
 }
 
 async function setChatConfig(username, config, channelID) {
-    console.log("channel ID:", channelID)
-    // Find the user's config
+    console.log("channel ID:", channelID);
     let chatConfig = await ChatConfig.findOne({ username, channelID });
 
-    // If the config doesn't exist, create a new one
     if (!chatConfig) {
+        // If the config doesn't exist, create a new one
         chatConfig = new ChatConfig({ username, channelID });
     }
 
-    // Sets GPT version to gpt-3.5-Turbo-16k if the model is any version of gpt-3
-    if (config.model && config.model.includes("gpt-3")) {
-        chatConfig.model = "gpt-3.5-turbo-16k";
-    } else if (config.model) {
-        chatConfig.model = config.model;
+    // Update the model based on the provided config
+    if (config.model) {
+        if (config.model.includes("gpt-3")) {
+            // If the model contains "gpt-3", update it to "gpt-3.5-turbo-1106"
+            chatConfig.model = "gpt-3.5-turbo-1106";
+        } else if (config.model.includes("gpt-4")) {
+            // If the model contains "gpt-4", update it to "gpt-4-1106-preview"
+            // This will also catch any "gpt-4" models and update them to "gpt-4-1106-preview"
+            chatConfig.model = "gpt-4-1106-preview";
+        } else {
+            // If the model is something else, set it directly
+            chatConfig.model = config.model;
+        }
     }
 
+    // Update other configurations
     if (config.currentPersonality) {
         chatConfig.currentPersonality = config.currentPersonality;
     }
-
     if (config.temperature) {
         chatConfig.temperature = config.temperature;
     }
 
+    // Save the updated config
     await chatConfig.save();
     console.log(chatConfig);
 }
+
 
 module.exports = {
     getChatConfig,

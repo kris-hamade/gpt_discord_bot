@@ -140,7 +140,7 @@ async function generateVulnerabilityReport(vulnerabilities) {
 
   try {
     const response = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo-16k",
+      model: "gpt-4-1106-preview",
       messages: messages,
       temperature: 0.6,
     });
@@ -174,7 +174,7 @@ async function generateWebhookReport(message) {
 
   try {
     const response = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo-16k",
+      model: "gpt-4-1106-preview",
       messages: messages,
       temperature: 0.6,
     });
