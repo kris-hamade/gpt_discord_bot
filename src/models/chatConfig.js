@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const ChatConfigSchema = new Schema({
   username: { type: String, required: true },
   currentPersonality: { type: String, default: "haggle" },
-  model: { type: String, default: "gpt-4" },
+  model: { type: String, default: "gpt-4-1106-preview" },
   temperature: { type: Number, default: 1 },
   channelID: { type: String, required: true },
 }, { timestamps: true, collection: 'chatConfig' });
