@@ -32,14 +32,14 @@ deploy_prod:
   before_script:
     - apk add --no-cache curl
   script:
-    - chmod og= "$ID_RSA_CLOUD"
+    - chmod og= "$ID_RSA"
     - apk update && apk add openssh-client
-    - ssh -i $ID_RSA_CLOUD -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY"
-    - ssh -i $ID_RSA_CLOUD -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker pull $TAG_COMMIT"
-    - ssh -i $ID_RSA_CLOUD -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker container rm -f $PROD_CONTAINER_NAME || true"
-    - ssh -i $ID_RSA_CLOUD -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker run -d -p $PROD_SERVER_PORT:3000 --name $PROD_CONTAINER_NAME -e API_KEY=$API_KEY -e DISCORD_TOKEN=$DISCORD_TOKEN -e OPENAI_API_KEY=$OPENAI_API_KEY -e MONGODB_URI=$MONGODB_URI -e SENTRY_DSN=$SENTRY_DSN -e AZURE_VISION_ENDPOINT=$AZURE_VISION_ENDPOINT -e AZURE_VISION_KEY=$AZURE_VISION_KEY -e LEONARDO_AI_KEY=$LEONARDO_AI_KEY -e STABLE_DIFFUSION_KEY=$STABLE_DIFFUSION_KEY -v $CI_PROJECT_DIR/prod/data-misc:/src/utils/data-misc --restart=unless-stopped $TAG_COMMIT"
+    - ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY"
+    - ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker pull $TAG_COMMIT"
+    - ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker container rm -f $PROD_CONTAINER_NAME || true"
+    - ssh -i $ID_RSA -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker run -d -p $PROD_SERVER_PORT:3000 --name $PROD_CONTAINER_NAME -e API_KEY=$API_KEY -e DISCORD_TOKEN=$DISCORD_TOKEN -e OPENAI_API_KEY=$OPENAI_API_KEY -e MONGODB_URI=$MONGODB_URI -e SENTRY_DSN=$SENTRY_DSN -e AZURE_VISION_ENDPOINT=$AZURE_VISION_ENDPOINT -e AZURE_VISION_KEY=$AZURE_VISION_KEY -e LEONARDO_AI_KEY=$LEONARDO_AI_KEY -e STABLE_DIFFUSION_KEY=$STABLE_DIFFUSION_KEY -v $CI_PROJECT_DIR/prod/data-misc:/src/utils/data-misc --restart=unless-stopped $TAG_COMMIT"
   tags:
-    - cloud
+    - on-prem
   rules:
     - if: '$CI_COMMIT_REF_NAME == "main"'
 deploy_dev:
@@ -59,7 +59,7 @@ deploy_dev:
     - ssh -i $ID_RSA_CLOUD -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker container rm -f $DEV_CONTAINER_NAME || true"
     - ssh -i $ID_RSA_CLOUD -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker run -d -p $DEV_SERVER_PORT:3000 --name $DEV_CONTAINER_NAME -e API_KEY=$API_KEY -e DISCORD_TOKEN=$DEV_DISCORD_TOKEN -e OPENAI_API_KEY=$OPENAI_API_KEY -e MONGODB_URI=$MONGODB_URI -e SENTRY_DSN=$SENTRY_DSN -e AZURE_VISION_ENDPOINT=$AZURE_VISION_ENDPOINT -e AZURE_VISION_KEY=$AZURE_VISION_KEY -e LEONARDO_AI_KEY=$LEONARDO_AI_KEY -e STABLE_DIFFUSION_KEY=$STABLE_DIFFUSION_KEY -v $CI_PROJECT_DIR/dev/data-misc:/src/utils/data-misc --restart=unless-stopped $TAG_COMMIT"
   tags:
-    - cloud
+    - on-prem
   rules:
     - if: '$CI_COMMIT_REF_NAME == "dev_deploy"'
 postman_tests_prod:
