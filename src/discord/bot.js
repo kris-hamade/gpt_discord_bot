@@ -114,7 +114,9 @@ async function handleMessage(message) {
         nickname,
         currentPersonality.name,
         userConfig.model,
-        userConfig.temperature
+        userConfig.temperature,
+        imageDescription,
+        channelId
       );
     }
 
