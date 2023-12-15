@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const { getCharacterLimit } = require("../utils/data-misc/config.js");
-const { Configuration, OpenAIApi } = require("openai");
+const OpenAI = require("openai");
 const { getHistory } = require("../discord/historyLog.js");
 const { scheduleEvent } = require("../utils/eventScheduler.js");
 const mongoose = require('mongoose');
@@ -12,10 +12,9 @@ const leonardo = require('api')('@leonardoai/v1.0#28807z41owlgnis8jg');
 const axios = require('axios');
 
 
-const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
 });
-const openai = new OpenAIApi(configuration);
 
 // Set the max prompt size * 4 is about to calculate token size
 // characterLimit is set in the config.js file
@@ -33,7 +32,8 @@ async function generateResponse(
   personality,
   model,
   temperature,
-  imageDescription
+  imageDescription,
+  channelId
 ) {
 
   // Fetch haggle stats
@@ -43,14 +43,7 @@ async function generateResponse(
 
   maxPromptSize = getCharacterLimit(model);
 
-  const chatHistory = await getSizedHistory(
-    prompt,
-    persona,
-    haggleStatsPrompt,
-    dndData,
-    nickname,
-    personality
-  );
+  const chatHistory = await getHistory(nickname, personality, channelId);
 
   console.log("Generating response for prompt:", prompt); // Log the prompt
   console.log("Using persona:", persona); // Log the persona
@@ -60,7 +53,7 @@ async function generateResponse(
   console.log("Using Image Description:", imageDescription); // Log the Image Description (if any)
 
   try {
-    const response = await openai.createChatCompletion({
+    const response = await openai.chat.completions.create({
       model: model,
       messages: [
         {
@@ -95,14 +88,14 @@ async function generateResponse(
       temperature: temperature,
     });
 
-    const message = response.data.choices[0].message.content;
+    const message = response.choices[0].message.content;
     // Log the number of tokens used
-    console.log("Prompt tokens used:", response.data.usage.prompt_tokens);
+    console.log("Prompt tokens used:", response.usage.prompt_tokens);
     console.log(
       "Completion tokens used:",
-      response.data.usage.completion_tokens
+      response.usage.completion_tokens
     );
-    console.log("Total tokens used:", response.data.usage.total_tokens);
+    console.log("Total tokens used:", response.usage.total_tokens);
 
     console.log("Generated message:", message); // Log the generated message for debugging
 
@@ -139,18 +132,18 @@ async function generateVulnerabilityReport(vulnerabilities) {
   ];
 
   try {
-    const response = await openai.createChatCompletion({
+    const response = await openai.chat.completions.create({
       model: "gpt-4-1106-preview",
       messages: messages,
       temperature: 0.6,
     });
 
-    const message = response.data.choices[0].message.content;
+    const message = response.choices[0].message.content;
 
     // Log the tokens used
-    console.log("Prompt tokens used:", response.data.usage.prompt_tokens);
-    console.log("Completion tokens used:", response.data.usage.completion_tokens);
-    console.log("Total tokens used:", response.data.usage.total_tokens);
+    console.log("Prompt tokens used:", response.usage.prompt_tokens);
+    console.log("Completion tokens used:", response.usage.completion_tokens);
+    console.log("Total tokens used:", response.usage.total_tokens);
 
     console.log("Generated message:", message); // Log the generated message for debugging
     return message; // Return the generated message from the function
@@ -173,18 +166,18 @@ async function generateWebhookReport(message) {
   ];
 
   try {
-    const response = await openai.createChatCompletion({
+    const response = await openai.chat.completions.create({
       model: "gpt-4-1106-preview",
       messages: messages,
       temperature: 0.6,
     });
 
-    const message = response.data.choices[0].message.content;
+    const message = response.choices[0].message.content;
 
     // Log the tokens used
-    console.log("Prompt tokens used:", response.data.usage.prompt_tokens);
-    console.log("Completion tokens used:", response.data.usage.completion_tokens);
-    console.log("Total tokens used:", response.data.usage.total_tokens);
+    console.log("Prompt tokens used:", response.usage.prompt_tokens);
+    console.log("Completion tokens used:", response.usage.completion_tokens);
+    console.log("Total tokens used:", response.usage.total_tokens);
 
     console.log("Generated message:", message); // Log the generated message for debugging
     return message; // Return the generated message from the function
@@ -213,18 +206,18 @@ async function generateImageResponse(prompt, persona, model, temperature, imageD
   ];
   console.log(formattedDescription)
   try {
-    const response = await openai.createChatCompletion({
+    const response = await openai.chat.completions.create({
       model: model,
       messages: messages,
       temperature: temperature,
     });
 
-    const message = response.data.choices[0].message.content;
+    const message = response.choices[0].message.content;
 
     // Log the tokens used
-    console.log("Prompt tokens used:", response.data.usage.prompt_tokens);
-    console.log("Completion tokens used:", response.data.usage.completion_tokens);
-    console.log("Total tokens used:", response.data.usage.total_tokens);
+    console.log("Prompt tokens used:", response.usage.prompt_tokens);
+    console.log("Completion tokens used:", response.usage.completion_tokens);
+    console.log("Total tokens used:", response.usage.total_tokens);
 
     console.log("Generated message:", message); // Log the generated message for debugging
 
@@ -265,23 +258,35 @@ function capitalizeFirstLetter(string) {
 
 async function generateEventData(prompt, channelId, client) {
   try {
-    const response = await openai.createChatCompletion({
+    console.log(`Generating event data with prompt: ${prompt}`);
+
+    const exampleJson = {
+      "Event Name": "Sample Event",
+      "Date": "YYYY-MM-DD",
+      "Time": "HH:mm:ss",
+      "Frequency": "CRON format",
+      "Timezone": "IANA Time Zone"
+    };
+
+    const response = await openai.chat.completions.create({
       model: "gpt-4-1106-preview",
       messages: [
         {
           role: "system",
           content:
-            "The user wants to schedule an event, and I need to parse specific details from their request to return a JSON object with the following fields:\\n\\n- Event Name: The name or title of the event.\\n- Date: The date of the event in YYYY-MM-DD format.\\n- Time: The time of the event in HH:mm:ss format.\\n- Frequency: The reminder frequency, represented in CRON format.\\n- Timezone: The timezone of the event, using the best IANA Time Zone Identifier.\\n\\nPlease analyze the following user's request and extract the necessary information:\\n\\nUser's Request: ",
+            "The user wants to schedule an event based on the following template JSON. Please fill in the details based on the user's request:\n\n" +
+            JSON.stringify(exampleJson, null, 2) + "\n\nUser's Request: "
         },
         {
           role: "user",
-          content: `${prompt}`,
+          content: `${prompt}`
         }
       ],
       temperature: 0.2
     });
-    const message = response.data.choices[0].message.content;
-    console.log("Generated message:", message);
+
+    const message = response.choices[0].message.content;
+    console.log("Generated message from GPT:", message);
 
     try {
       const eventData = JSON.parse(message);
@@ -472,28 +477,6 @@ async function getGenerationWhenComplete(generationId, delay = 2000, maxAttempts
   }
 
   return tryGetGeneration();
-}
-
-async function getSizedHistory(
-  prompt,
-  persona,
-  haggleStatsPrompt,
-  dndData,
-  nickname,
-  personality,
-  channelId
-) {
-  const promptLength = prompt.length;
-  const personaLength = JSON.stringify(persona).length;
-  const haggleStatsPromptLength = haggleStatsPrompt.length;
-  const dndDataLength = JSON.stringify(dndData).length;
-
-  const totalLength =
-    promptLength + personaLength + haggleStatsPromptLength + dndDataLength;
-  const remainingSize = maxPromptSize - totalLength;
-
-  const historyItems = await getHistory(remainingSize, nickname, personality, channelId);
-  return historyItems;
 }
 
 async function personaBuilder(persona) {
