@@ -1,7 +1,6 @@
 const fs = require("fs");
 const path = require("path");
 const moment = require("moment");
-const ChatConfig = require('../models/chatConfig');
 const ChatHistory = require('../models/chatHistory');
 const Roll20Data = require("../models/roll20Data");
 
@@ -213,7 +212,7 @@ exports.uploadRoll20Data = async (req, res) => {
 
 exports.webhookHandler = (req, res) => {
   // Process the incoming webhook data here
-  //console.log(req.body);
+  // console.log(req.body);
   processWebhook(req.body)
   res.status(200).send('Webhook data received!');
 };

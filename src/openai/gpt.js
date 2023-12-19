@@ -1,13 +1,9 @@
-const fs = require("fs");
-const path = require("path");
 const { getCharacterLimit } = require("../utils/data-misc/config.js");
 const OpenAI = require("openai");
 const { getHistory } = require("../discord/historyLog.js");
 const { scheduleEvent } = require("../utils/eventScheduler.js");
-const mongoose = require('mongoose');
 const HaggleStats = require('../models/haggleStats');
 const { getImageDescription } = require("../utils/vision.js");
-const { stringify } = require("querystring");
 const leonardo = require('api')('@leonardoai/v1.0#28807z41owlgnis8jg');
 const axios = require('axios');
 

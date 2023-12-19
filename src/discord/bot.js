@@ -541,7 +541,7 @@ function start() {
             return;
           }
           try {
-            const result = await deleteEvent(eventName.toLowerCase()); // Using JavaScript's built-in toLowerCase
+            const result = await deleteEvent(eventName.toLowerCase());
             if (result) {
               await interaction.reply(`Event with Name ${eventName} has been deleted.`);
             } else {
@@ -560,13 +560,13 @@ function start() {
             await interaction.deferReply();
             const description = interaction.options.getString('description');
 
-            let imageUrls, eta; // Define here to use later
+            let imageUrls, eta;
 
             if (subCommand === 'leonardo') {
               const imageObjects = await generateLeonardoImage(description);
-              imageUrls = imageObjects.map(obj => obj.url);  // Extracting URLs
+              imageUrls = imageObjects.map(obj => obj.url);
               console.log(imageUrls);
-              eta = 0;  // You're setting the eta to 0 here. 
+              eta = 0;
             } else {
               ({ imageUrls, eta } = await generateImage(description));
             }
@@ -599,7 +599,6 @@ function start() {
           const channelId = interaction.channelId;
 
           if (subCommand === 'list') {
-            // Your existing code to list available webhooks
           } else if (subCommand === 'subscribe') {
             const selectedWebhookName = interaction.options.getString('name').toLowerCase();
 
@@ -614,7 +613,6 @@ function start() {
             const newSubscription = new WebhookSubs({
               origin: selectedWebhookName,
               channelId: channelId,
-              // Any other fields you want to store
             });
 
             await newSubscription.save();
