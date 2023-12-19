@@ -19,8 +19,6 @@ async function getHistoryJson(size) {
     if (size === "complete") {
       const allHistory = await ChatHistory.find();
       return allHistory;
-    } else {
-      //... your size-limited retrieval logic ...
     }
   } catch (error) {
     console.error("Error getting history JSON:", error);

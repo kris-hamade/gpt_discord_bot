@@ -18,14 +18,6 @@ async function loadJobsFromDatabase(client) {
         const date = time.split('T')[0];
         const timePart = time.split('T')[1];
 
-        /*         // Check if any field is undefined
-                if (!eventName || !date || !timePart || !frequency || !timezone) {
-                    console.log(`Removing invalid event with missing field(s): ${eventName}`);
-                    await ScheduledEvent.deleteOne({ _id: event._id });
-                    continue;
-                } */
-
-        // Check if the date/time is past now
         // Check if the date/time is past now
         const eventTime = moment.tz(`${date}T${timePart}`, "YYYY-MM-DDTHH:mm:ss", timezone);
         if (eventTime.isBefore(now)) {
