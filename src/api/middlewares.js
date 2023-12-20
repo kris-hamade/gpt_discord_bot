@@ -54,3 +54,23 @@ async function getCurrentRoll20Data(type, req, res) {
         });
     }
 }
+
+// WebSocket Handler
+exports.handleWebSocketMessage = async (ws, message) => {
+    try {
+        const data = JSON.parse(message);
+
+        // Authenticate the message here...
+
+        // Process the message using GPT controller
+        const gptResponse = await controllers.handleGPTInteraction({ body: data }, {
+            json: (response) => response
+        });
+
+        // Send response back to WebSocket client
+        ws.send(JSON.stringify(gptResponse));
+    } catch (error) {
+        console.error("Error handling WebSocket message:", error);
+        ws.send(JSON.stringify({ error: 'Error processing your request' }));
+    }
+};

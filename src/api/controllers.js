@@ -2,7 +2,9 @@ const fs = require("fs");
 const path = require("path");
 const moment = require("moment");
 const ChatHistory = require('../models/chatHistory');
+const { gptWebSocketHandler } = require("../openai/gpt");
 const Roll20Data = require("../models/roll20Data");
+const appEmitter = require("../utils/eventEmitter");
 
 const {
   getConfigInformation,
@@ -209,6 +211,18 @@ exports.uploadRoll20Data = async (req, res) => {
     });
   }
 };
+
+appEmitter.on('websocketMessage', async (data) => {
+  try {
+    const { ws, userId, content } = data;
+    await gptWebSocketHandler(userId, content, ws);
+  } catch (error) {
+    console.error("Error in GPT interaction:", error);
+    if (data.ws && data.ws.readyState === 1) {
+      data.ws.send(JSON.stringify({ success: false, message: "An error occurred during GPT interaction." }));
+    }
+  }
+});
 
 exports.webhookHandler = (req, res) => {
   // Process the incoming webhook data here

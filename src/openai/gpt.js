@@ -541,6 +541,59 @@ function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
+// Define conversations object at the module level
+let conversations = {};
+
+async function gptWebSocketHandler(userId, content, ws) {
+  console.log('Received userId:', userId, 'Content:', content);
+
+  // Validate parameters
+  if (typeof userId === 'undefined' || userId === null) {
+    throw new Error('UserId is undefined or null');
+  }
+
+  if (typeof content !== 'string' || content === null) {
+    throw new Error('Invalid message content');
+  }
+
+  // Initialize conversation for the user if it doesn't exist
+  if (!conversations[userId]) {
+    conversations[userId] = { messages: [] };
+  }
+
+  conversations[userId].messages.push({ role: "user", content });
+  console.log("Sending to OpenAI:", conversations[userId].messages);
+
+  try {
+    const stream = await openai.beta.chat.completions.stream({
+      model: "gpt-4-1106-preview",
+      messages: conversations[userId].messages,
+      stream: true,
+    });
+
+    for await (const chunk of stream) {
+      if (chunk.choices[0]?.delta?.content) {
+        const replyContent = chunk.choices[0].delta.content;
+        conversations[userId].messages.push({
+          role: "assistant",
+          content: replyContent
+        });
+
+        // Send each chunk back to the client as it arrives
+        if (ws && ws.readyState === 1) {
+          ws.send(JSON.stringify({ reply: replyContent }));
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error in OpenAI completion:", error);
+    if (ws && ws.readyState === 1) {
+      ws.send(JSON.stringify({ error: 'Error processing your request' }));
+    }
+  }
+}
+
+
 module.exports = {
   generateResponse,
   generateEventData,
@@ -548,5 +601,6 @@ module.exports = {
   generateImageResponse,
   generateLeonardoImage,
   generateVulnerabilityReport,
-  generateWebhookReport
+  generateWebhookReport,
+  gptWebSocketHandler
 };
