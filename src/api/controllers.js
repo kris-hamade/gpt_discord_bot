@@ -212,17 +212,16 @@ exports.uploadRoll20Data = async (req, res) => {
   }
 };
 
-appEmitter.on('websocketMessage', async (data) => {
-  try {
-    const { ws, userId, content } = data;
-    await gptWebSocketHandler(userId, content, ws);
-  } catch (error) {
-    console.error("Error in GPT interaction:", error);
-    if (data.ws && data.ws.readyState === 1) {
-      data.ws.send(JSON.stringify({ success: false, message: "An error occurred during GPT interaction." }));
+exports.handleGPTInteraction = async ({ userId, content, type }, ws) => {
+    try {
+        console.log({ userId, content, type }); // Logging for debugging
+        await gptWebSocketHandler(userId, content, ws, type);
+
+    } catch (error) {
+        console.error("Error in GPT interaction:", error);
+        ws.send(JSON.stringify({ error: 'Error processing your request' }));
     }
-  }
-});
+};
 
 exports.webhookHandler = (req, res) => {
   // Process the incoming webhook data here
