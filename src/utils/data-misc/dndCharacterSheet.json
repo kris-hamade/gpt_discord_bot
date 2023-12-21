@@ -1,0 +1,172 @@
+{
+    "characterName": "",
+    "classAndLevel": "",
+    "background": "",
+    "playerName": "",
+    "race": "",
+    "alignment": "",
+    "experiencePoints": "",
+    "attributes": {
+        "strength": "",
+        "dexterity": "",
+        "constitution": "",
+        "intelligence": "",
+        "wisdom": "",
+        "charisma": ""
+    },
+    "inspiration": "",
+    "proficiencyBonus": "",
+    "savingThrows": {
+        "strength": false,
+        "dexterity": false,
+        "constitution": false,
+        "intelligence": false,
+        "wisdom": false,
+        "charisma": false
+    },
+    "skills": [
+        {
+            "name": "Acrobatics",
+            "isProficient": false
+        },
+        {
+            "name": "Animal Handling",
+            "isProficient": false
+        },
+        {
+            "name": "Arcana",
+            "isProficient": false
+        },
+        {
+            "name": "Athletics",
+            "isProficient": false
+        },
+        {
+            "name": "Deception",
+            "isProficient": false
+        },
+        {
+            "name": "History",
+            "isProficient": false
+        },
+        {
+            "name": "Insight",
+            "isProficient": false
+        },
+        {
+            "name": "Intimidation",
+            "isProficient": false
+        },
+        {
+            "name": "Investigation",
+            "isProficient": false
+        },
+        {
+            "name": "Medicine",
+            "isProficient": false
+        },
+        {
+            "name": "Nature",
+            "isProficient": false
+        },
+        {
+            "name": "Perception",
+            "isProficient": false
+        },
+        {
+            "name": "Performance",
+            "isProficient": false
+        },
+        {
+            "name": "Persuasion",
+            "isProficient": false
+        },
+        {
+            "name": "Religion",
+            "isProficient": false
+        },
+        {
+            "name": "Sleight of Hand",
+            "isProficient": false
+        },
+        {
+            "name": "Stealth",
+            "isProficient": false
+        },
+        {
+            "name": "Survival",
+            "isProficient": false
+        }
+    ],
+    "passiveWisdom": "",
+    "otherProficienciesAndLanguages": "",
+    "armorClass": "",
+    "initiative": "",
+    "speed": "",
+    "hitPointMaximum": "",
+    "currentHitPoints": "",
+    "temporaryHitPoints": "",
+    "hitDice": "",
+    "deathSaves": {
+        "successes": "",
+        "failures": ""
+    },
+    "attacksAndSpellcasting": {},
+    "equipment": {},
+    "personalityTraits": "",
+    "ideals": "",
+    "bonds": "",
+    "flaws": "",
+    "featuresAndTraits": {},
+    "characterAppearance": {
+        "age": "",
+        "height": "",
+        "weight": "",
+        "eyes": "",
+        "skin": "",
+        "hair": ""
+    },
+    "characterBackstory": "",
+    "alliesAndOrganizations": "",
+    "additionalFeaturesAndTraits": "",
+    "treasure": "",
+    "spellcastingClass": "",
+    "spellcastingAbility": "",
+    "spellSaveDC": "",
+    "spellAttackBonus": "",
+    "spells": {
+        "cantrips": {
+            "spells": [],
+            "slots": ""
+        },
+        "level1": {
+            "spells": [],
+            "slots": ""
+        },
+        "level2": {
+            "spells": [],
+            "slots": ""
+        },
+        "level3": {
+            "spells": [],
+            "slots": ""
+        },
+        "level4": {
+            "spells": [],
+            "slots": ""
+        },
+        "level5": {
+            "spells": [],
+            "slots": ""
+        },
+        "level6": {
+            "spells": [],
+            "slots": ""
+        },
+        "level7": {
+            "spells": [],
+            "slots": ""
+        }
+    },
+    "notes": ""
+}
