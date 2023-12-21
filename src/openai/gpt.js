@@ -541,37 +541,36 @@ function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-let conversations = {};
-
 async function gptWebSocketHandler(userId, content, ws, type) {
-    console.log('Received userId:', userId, 'Content:', content);
+  let conversations = {};
+  console.log('Received userId:', userId, 'Content:', content);
 
-    // Validate parameters
-    if (typeof userId === 'undefined' || userId === null) {
-        throw new Error('UserId is undefined or null');
-    }
+  // Validate parameters
+  if (typeof userId === 'undefined' || userId === null) {
+    throw new Error('UserId is undefined or null');
+  }
 
-    if (typeof content !== 'string' || content === null) {
-        throw new Error('Invalid message content');
-    }
+  if (typeof content !== 'string' || content === null) {
+    throw new Error('Invalid message content');
+  }
 
-    // Initialize conversation for the user if it doesn't exist
-    if (!conversations[userId]) {
-        conversations[userId] = { messages: [] };
-    }
+  // Initialize conversation for the user if it doesn't exist
+  if (!conversations[userId]) {
+    conversations[userId] = { messages: [] };
+  }
 
-    // Check if it's a DnD character sheet generation request
-    if (type === "dndCharacterSheet") {
-        const dndCharacterTemplate = require('../utils/data-misc/dndCharacterSheet.json');
+  // Check if it's a DnD character sheet generation request
+  if (type === "dndCharacterSheet") {
+    const dndCharacterTemplate = require('../utils/data-misc/dndCharacterSheet.json');
 
-        // Ensure you use the correct variable name here
-        content = "Generate a DnD character sheet in the following JSON format based on the user's input:\n\n" +
-            JSON.stringify(dndCharacterTemplate, null, 2) + "\n\nUser's Input: " + content;
-    }
+    // Ensure you use the correct variable name here
+    content = "Generate a DnD character sheet in the following JSON format using markdown based on the user's input:\n\n" +
+      JSON.stringify(dndCharacterTemplate, null, 2) + "\n\nUser's Input: " + content;
+  }
 
-    conversations[userId].messages.push({ role: "user", content });
+  conversations[userId].messages.push({ role: "user", content });
 
-    console.log("Sending to OpenAI:", conversations[userId].messages);
+  console.log("Sending to OpenAI:", conversations[userId].messages);
 
 
   try {
