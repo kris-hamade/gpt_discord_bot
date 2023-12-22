@@ -4,12 +4,11 @@ const moment = require("moment");
 const ChatHistory = require('../models/chatHistory');
 const { gptWebSocketHandler } = require("../openai/gpt");
 const Roll20Data = require("../models/roll20Data");
-const appEmitter = require("../utils/eventEmitter");
 
 const {
   getConfigInformation,
   getUptime,
-} = require("../utils/data-misc/config");
+} = require("../utils/config");
 
 const { processWebhook } = require("../utils/webhook");
 
