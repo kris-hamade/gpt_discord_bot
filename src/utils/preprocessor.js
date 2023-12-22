@@ -1,8 +1,7 @@
-const _ = require("lodash");
 const fs = require("fs");
 const path = require("path");
 const natural = require("natural");
-const { getCharacterLimit } = require("./data-misc/config.js");
+const { getCharacterLimit } = require("./config.js");
 const { getChatConfig } = require("../discord/chatConfig.js");
 const stemmer = natural.PorterStemmer;
 const { BrillPOSTagger } = natural;
@@ -10,7 +9,6 @@ const lexicon = new natural.Lexicon("EN", "N", "NNP");
 const rules = new natural.RuleSet("EN");
 const tagger = new BrillPOSTagger(lexicon, rules);
 const Roll20Data = require('../models/roll20Data'); // assuming you save the schema in a file called roll20Data.js
-const { channel } = require("diagnostics_channel");
 
 async function loadNamesData() {
   const data = await Roll20Data.find({});
