@@ -36,6 +36,8 @@ router.get('/getCharacterSheet', authMiddleware, controller.getCharacterSheet);
 
 // POST Endpoints
 // D&D Character Sheet POST Endpoints, API Key Required
+router.post('/createCharacterSheet', authMiddleware, controller.createCharacterSheet);
+
 // Save Users Character Sheet
 router.post('/saveCharacterSheet', authMiddleware, controller.saveCharacterSheet);
 
@@ -44,6 +46,10 @@ router.post('/uploadRoll20Data/:type', authMiddleware, upload.single('file'), co
 
 // Webhook endpoint
 router.post('/webhook', authMiddleware, controller.webhookHandler);
+
+// PUT Endpoints
+// Update Character Sheet
+router.put('/updateCharacterSheet/', authMiddleware, controller.updateCharacterSheet);
 
 // Delete Endpoints
 // Clear chat history, API key required

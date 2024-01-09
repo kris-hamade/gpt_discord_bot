@@ -222,9 +222,13 @@ exports.handleGPTInteraction = async ({ userId, content, type }, ws) => {
     }
 };
 
+exports.createCharacterSheet = async ({}) => {}
+
 exports.getCharacterSheet = async ({}) => {}
 
 exports.saveCharacterSheet = async ({}) => {}
+
+exports.updateCharacterSheet = async ({}) => {}
 
 exports.webhookHandler = (req, res) => {
   // Process the incoming webhook data here
