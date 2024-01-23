@@ -353,72 +353,10 @@ function formatImageDescription(imageDescription) {
   return descriptions.join('. ');
 }
 
-async function gptWebSocketHandler(userId, content, ws, type) {
-  let conversations = {};
-  console.log('Received userId:', userId, 'Content:', content);
-
-  // Validate parameters
-  if (typeof userId === 'undefined' || userId === null) {
-    throw new Error('UserId is undefined or null');
-  }
-
-  if (typeof content !== 'string' || content === null) {
-    throw new Error('Invalid message content');
-  }
-
-  // Initialize conversation for the user if it doesn't exist
-  if (!conversations[userId]) {
-    conversations[userId] = { messages: [] };
-  }
-
-  // Check if it's a DnD character sheet generation request
-  if (type === "dndCharacterSheet") {
-    const dndCharacterTemplate = require('../utils/data-misc/dndCharacterSheet.json');
-
-    // Ensure you use the correct variable name here
-    content = "Generate a DnD character sheet in the following JSON format using markdown based on the user's input:\n\n" +
-      JSON.stringify(dndCharacterTemplate, null, 2) + "\n\nUser's Input: " + content;
-  }
-
-  conversations[userId].messages.push({ role: "user", content });
-
-  console.log("Sending to OpenAI:", conversations[userId].messages);
-
-
-  try {
-    const stream = await openai.beta.chat.completions.stream({
-      model: "gpt-4-1106-preview",
-      messages: conversations[userId].messages,
-      stream: true,
-    });
-
-    for await (const chunk of stream) {
-      if (chunk.choices[0]?.delta?.content) {
-        const replyContent = chunk.choices[0].delta.content;
-        conversations[userId].messages.push({
-          role: "assistant",
-          content: replyContent
-        });
-
-        // Send each chunk back to the client as it arrives
-        if (ws && ws.readyState === 1) {
-          ws.send(JSON.stringify({ reply: replyContent }));
-        }
-      }
-    }
-  } catch (error) {
-    console.error("Error in OpenAI completion:", error);
-    if (ws && ws.readyState === 1) {
-      ws.send(JSON.stringify({ error: 'Error processing your request' }));
-    }
-  }
-}
-
 module.exports = {
   generateResponse,
   generateEventData,
   generateImageResponse,
   generateVulnerabilityReport,
-  generateWebhookReport,
-  gptWebSocketHandler
+  generateWebhookReport
 };

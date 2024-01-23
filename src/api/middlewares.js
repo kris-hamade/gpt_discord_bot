@@ -1,6 +1,4 @@
 const Roll20Data = require("../models/roll20Data");
-const controllers = require("./controllers");
-const appEmitter = require("../utils/eventEmitter");
 
 const API_KEY = process.env.API_KEY;
 
@@ -56,19 +54,3 @@ async function getCurrentRoll20Data(type, req, res) {
         });
     }
 }
-
-// WebSocket Handler
-appEmitter.on('websocketMessage', async ({ ws, userId, content, type }) => {
-    try {
-        console.log({ userId, content, type }); // Logging for debugging
-
-        // Authenticate the message here...
-
-        // Process the message using GPT controller
-        await controllers.handleGPTInteraction({ userId, content, type }, ws);
-
-    } catch (error) {
-        console.error("Error handling WebSocket message:", error);
-        ws.send(JSON.stringify({ error: 'Error processing your request' }));
-    }
-});

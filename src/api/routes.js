@@ -1,15 +1,9 @@
 const express = require('express');
-const http = require('http');
-const WebSocket = require('ws');
 const router = express.Router();
 const controller = require('./controllers');
 const { authMiddleware, getCurrentJournal, getCurrentHandouts, verifyWebhookSecret } = require('./middlewares');
 const multer = require('multer');
 const upload = multer({ dest: './src/utils/data-uploads/' }); // This will save the uploaded files in an 'uploads' directory.
-
-const app = express();
-const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
 
 // GET Endpoints
 // Check Bot Status, no API key required

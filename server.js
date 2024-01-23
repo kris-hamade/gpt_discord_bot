@@ -6,16 +6,13 @@ const fs = require("fs");
 const path = require("path");
 const express = require("express");
 const http = require('http');
-const WebSocket = require('ws');
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
 const routes = require("./src/api/routes");
 const { errorHandler } = require("./src/api/middlewares");
 const { connectDB } = require("./src/utils/db");
 const { start: bot } = require("./src/discord/bot");
 const { loadWebhookSubs } = require('./src/utils/webhook');
-const appEmitter = require('./src/utils/eventEmitter');
 const cors = require('cors');
 
 const archiveDirectory = path.join(__dirname, "./src/utils/data-archive/");
@@ -39,26 +36,6 @@ app.use(cors());
 
 // Use JSON middleware
 app.use(express.json());
-
-// WebSocket server
-wss.on('connection', (ws) => {
-  console.log('WebSocket connection established');
-
-  ws.on('message', (message) => {
-    try {
-      const data = JSON.parse(message);
-      appEmitter.emit('websocketMessage', { ws, ...data }); // Emit the event with WebSocket object and message data
-      console.log('Received message:', data);
-    } catch (error) {
-      console.error("Error parsing WebSocket message:", error);
-      ws.send(JSON.stringify({ error: 'Error processing your request' }));
-    }
-  });
-
-  ws.on('close', () => {
-    console.log('WebSocket connection closed');
-  });
-});
 
 // Use your routes
 app.use("/api", routes);
