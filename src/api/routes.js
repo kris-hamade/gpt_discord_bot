@@ -24,26 +24,12 @@ router.get('/currentJournal', getCurrentJournal);
 // Get current Handouts, no API key required
 router.get('/currentHandouts', getCurrentHandouts);
 
-// D&D Character Sheet POST Endpoints, API Key Required
-// Get Users Character Sheet
-router.get('/getCharacterSheet', authMiddleware, controller.getCharacterSheet);
-
 // POST Endpoints
-// D&D Character Sheet POST Endpoints, API Key Required
-router.post('/createCharacterSheet', authMiddleware, controller.createCharacterSheet);
-
-// Save Users Character Sheet
-router.post('/saveCharacterSheet', authMiddleware, controller.saveCharacterSheet);
-
 // Endpoint to replace Roll20 JSON Data, API key required
 router.post('/uploadRoll20Data/:type', authMiddleware, upload.single('file'), controller.uploadRoll20Data);
 
 // Webhook endpoint
 router.post('/webhook', authMiddleware, controller.webhookHandler);
-
-// PUT Endpoints
-// Update Character Sheet
-router.put('/updateCharacterSheet/', authMiddleware, controller.updateCharacterSheet);
 
 // Delete Endpoints
 // Clear chat history, API key required
