@@ -10,7 +10,7 @@ const {
 const {
   getConfigInformation,
   getUptime,
-} = require("../utils/data-misc/config");
+} = require("../utils/config");
 const { getChatConfig, setChatConfig } = require("./chatConfig");
 const { deleteEvent, loadJobsFromDatabase } = require("../utils/eventScheduler");
 const ScheduledEvent = require('../models/scheduledEvent');
@@ -18,7 +18,7 @@ const moment = require('moment-timezone');
 const cronstrue = require('cronstrue');
 const axios = require('axios');
 const Personas = require('../models/personas');
-const { getImageDescription } = require('../utils/vision');
+const { getImageDescription } = require('../imaging/vision');
 const WebhookSubs = require('../models/webhookSub');
 const { loadWebhookSubs } = require('../utils/webhook');
 
