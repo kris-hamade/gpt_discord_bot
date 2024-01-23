@@ -1,24 +1,22 @@
 require("dotenv").config();
 const Sentry = require("@sentry/node");
 const Tracing = require("@sentry/tracing");
-const { sentryLogging } = require("./src/sentry/sentry");
+const { sentryLogging } = require("./src/sentry/sentry");  // Sentry initialization function
+
+// Initialize Sentry with Tracing
+sentryLogging();
+
 const fs = require("fs");
 const path = require("path");
 const express = require("express");
-const http = require('http');
 const app = express();
-const server = http.createServer(app);
 const routes = require("./src/api/routes");
 const { errorHandler } = require("./src/api/middlewares");
 const { connectDB } = require("./src/utils/db");
 const { start: bot } = require("./src/discord/bot");
 const { loadWebhookSubs } = require('./src/utils/webhook');
-const cors = require('cors');
 
 const archiveDirectory = path.join(__dirname, "./src/utils/data-archive/");
-
-// Initialize Sentry with Tracing
-sentryLogging();
 
 // Make sure the archive directory exists if not create it
 if (!fs.existsSync(archiveDirectory)) {
@@ -30,9 +28,6 @@ app.use(Sentry.Handlers.requestHandler({
   transactionName: (req) => `${req.method} ${req.url}`, // Optional: customize transaction names
   tracingOrigins: ["localhost", /^\//], // Adjust according to your needs
 }));
-
-// Use CORS middleware
-app.use(cors());
 
 // Use JSON middleware
 app.use(express.json());
@@ -59,7 +54,7 @@ try {
 loadWebhookSubs();
 
 const port = process.env.PORT || 3000;
-server.listen(port, () => console.log(`Server running on port ${port}`));
+app.listen(port, () => console.log(`Server running on port ${port}`));
 
 // Starting the bot
 (async () => {

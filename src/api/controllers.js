@@ -9,6 +9,8 @@ const {
   getUptime,
 } = require("../utils/config");
 
+const { processWebhook } = require("../utils/webhook");
+
 // Get Bot Status /api/status
 exports.status = async (req, res) => {
   console.log(
@@ -206,4 +208,11 @@ exports.uploadRoll20Data = async (req, res) => {
       message: "An error occurred.",
     });
   }
+};
+
+exports.webhookHandler = (req, res) => {
+  // Process the incoming webhook data here
+  // console.log(req.body);
+  processWebhook(req.body)
+  res.status(200).send('Webhook data received!');
 };
