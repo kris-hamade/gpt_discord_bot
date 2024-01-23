@@ -2,15 +2,12 @@ const fs = require("fs");
 const path = require("path");
 const moment = require("moment");
 const ChatHistory = require('../models/chatHistory');
-const { gptWebSocketHandler } = require("../openai/gpt");
 const Roll20Data = require("../models/roll20Data");
 
 const {
   getConfigInformation,
   getUptime,
 } = require("../utils/config");
-
-const { processWebhook } = require("../utils/webhook");
 
 // Get Bot Status /api/status
 exports.status = async (req, res) => {
@@ -209,30 +206,4 @@ exports.uploadRoll20Data = async (req, res) => {
       message: "An error occurred.",
     });
   }
-};
-
-exports.handleGPTInteraction = async ({ userId, content, type }, ws) => {
-    try {
-        console.log({ userId, content, type }); // Logging for debugging
-        await gptWebSocketHandler(userId, content, ws, type);
-
-    } catch (error) {
-        console.error("Error in GPT interaction:", error);
-        ws.send(JSON.stringify({ error: 'Error processing your request' }));
-    }
-};
-
-exports.createCharacterSheet = async ({}) => {}
-
-exports.getCharacterSheet = async ({}) => {}
-
-exports.saveCharacterSheet = async ({}) => {}
-
-exports.updateCharacterSheet = async ({}) => {}
-
-exports.webhookHandler = (req, res) => {
-  // Process the incoming webhook data here
-  // console.log(req.body);
-  processWebhook(req.body)
-  res.status(200).send('Webhook data received!');
 };
