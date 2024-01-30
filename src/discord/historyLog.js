@@ -26,7 +26,7 @@ async function getHistoryJson(size) {
   }
 }
 
-async function getHistory(nickname, personality, channelId) {
+async function getHistory(nickname, personality, channelId, numberOfEntries = 2) {
   if (!channelId) {
     console.error("getHistory called with undefined channelId");
     return "Error: channelId is undefined";
@@ -34,18 +34,21 @@ async function getHistory(nickname, personality, channelId) {
   try {
     console.log(`getHistory called with nickname=${nickname}, personality=${personality}, channelId=${channelId}`);
 
-    // Fetching complete chat history
+    // Fetching the last 'numberOfEntries' entries from chat history
     const historyDocs = await ChatHistory.find({
       $or: [
         { requestor: nickname, username: nickname, channelId: channelId },
         { type: "assistant", username: personality, channelId: channelId }
       ]
-    });
+    }).sort({ _id: -1 }).limit(numberOfEntries);
 
-    console.log("Complete chat history fetched:", historyDocs);
+    // Since the documents are fetched in reverse order, reverse them to get the correct chronological order
+    const reversedHistoryDocs = historyDocs.reverse();
+
+    console.log("Last entries of chat history fetched:", reversedHistoryDocs);
 
     // Format and return the chat history
-    const formattedHistory = formatChatHistory(historyDocs);
+    const formattedHistory = formatChatHistory(reversedHistoryDocs);
     console.log("Formatted chat history:", formattedHistory);
     return formattedHistory;
   } catch (error) {
@@ -53,8 +56,6 @@ async function getHistory(nickname, personality, channelId) {
     throw error;
   }
 }
-
-
 
 function formatChatHistory(chatHistory) {
   return chatHistory
