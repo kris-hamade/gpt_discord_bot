@@ -15,6 +15,7 @@ const { errorHandler } = require("./src/api/middlewares");
 const { connectDB } = require("./src/utils/db");
 const { start: bot } = require("./src/discord/bot");
 const { loadWebhookSubs } = require('./src/utils/webhook');
+const { swaggerUi, swaggerSpec } = require('./src/api/swagger');
 
 const archiveDirectory = path.join(__dirname, "./src/utils/data-archive/");
 
@@ -28,6 +29,9 @@ app.use(Sentry.Handlers.requestHandler({
   transactionName: (req) => `${req.method} ${req.url}`, // Optional: customize transaction names
   tracingOrigins: ["localhost", /^\//], // Adjust according to your needs
 }));
+
+// Swagger setup
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Use JSON middleware
 app.use(express.json());
