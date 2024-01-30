@@ -10,7 +10,7 @@ let characterLimit = 96000 * 4;
 const startTime = moment();
 
 function getCharacterLimit(model) {
-    characterLimit = model === "gpt-4-1106-preview" ? 96000 * 4 : 96000 * 4;
+    characterLimit = model === "gpt-4-turbo-preview" ? 96000 * 4 : 96000 * 4;
     return characterLimit;
 }
 

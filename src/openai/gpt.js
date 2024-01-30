@@ -121,9 +121,10 @@ async function generateVulnerabilityReport(vulnerabilities) {
 
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4-1106-preview",
+      model: "gpt-4-turbo-preview",
       messages: messages,
       temperature: 0.6,
+      max_tokens: 1000
     });
 
     const message = response.choices[0].message.content;
@@ -155,9 +156,10 @@ async function generateWebhookReport(message) {
 
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4-1106-preview",
+      model: "gpt-4-turbo-preview",
       messages: messages,
       temperature: 0.6,
+      max_tokens: 1000
     });
 
     const message = response.choices[0].message.content;
@@ -198,6 +200,7 @@ async function generateImageResponse(prompt, persona, model, temperature, imageD
       model: model,
       messages: messages,
       temperature: temperature,
+      max_tokens: 1000
     });
 
     const message = response.choices[0].message.content;
@@ -257,7 +260,7 @@ async function generateEventData(prompt, channelId, client) {
     };
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4-1106-preview",
+      model: "gpt-4-turbo-preview",
       messages: [
         {
           role: "system",
@@ -270,7 +273,8 @@ async function generateEventData(prompt, channelId, client) {
           content: `${prompt}`
         }
       ],
-      temperature: 0.2
+      temperature: 0.2,
+      response_format: { "type": "json_object" }
     });
 
     const message = response.choices[0].message.content;
