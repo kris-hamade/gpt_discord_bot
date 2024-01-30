@@ -23,7 +23,7 @@ RUN npm install
 COPY . .
 
 # Copy .env file
-COPY .env ./
+COPY .env.example ./env
 
 CMD ["node", "server.js"]
 EXPOSE 8940
