@@ -1,16 +1,10 @@
 const Discord = require("discord.js");
 const client = require("./client")
-const { generateEventData, generateImage, generateImageResponse, generateLeonardoImage, generateResponse } = require("../openai/gpt");
+const { generateEventData, generateImageResponse, generateResponse } = require("../openai/gpt");
+const { generateImage, generateLeonardoImage } = require("../imaging/imageGeneration");
 const { preprocessUserInput } = require("../utils/preprocessor");
-const {
-  buildHistory,
-  clearAllHistory,
-  clearUsersHistory,
-} = require("./historyLog");
-const {
-  getConfigInformation,
-  getUptime,
-} = require("../utils/config");
+const { buildHistory, clearAllHistory, clearUsersHistory } = require("./historyLog");
+const { getConfigInformation, getUptime } = require("../utils/config");
 const { getChatConfig, setChatConfig } = require("./chatConfig");
 const { deleteEvent, loadJobsFromDatabase } = require("../utils/eventScheduler");
 const ScheduledEvent = require('../models/scheduledEvent');
@@ -28,6 +22,7 @@ const { Routes } = require('discord-api-types/v9');
 
 async function handleMessage(message) {
   let nickname = message.guild ? (message.member ? message.member.nickname || message.author.username : message.author.username) : message.author.username;
+  let username = message.author.username;
   let channelId = message.channel.id;
 
   // Ignore messages from other bots
@@ -68,8 +63,8 @@ async function handleMessage(message) {
 
   // Get the user's config from the database
   // Ensure config exists for the user and channel before fetching it.
-  await setChatConfig(nickname, {}, channelId); // Pass an empty config, because your function will set defaults if not found
-  let userConfig = await getChatConfig(nickname, channelId);
+  await setChatConfig(username, {}, channelId); // Pass an empty config, because your function will set defaults if not found
+  let userConfig = await getChatConfig(username, channelId);
 
   // Fetch the persona details based on the current personality in user's chat config
   let currentPersonality = await Personas.findOne({ name: userConfig.currentPersonality });
