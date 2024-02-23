@@ -1,4 +1,3 @@
-const mongoose = require('mongoose');
 const moment = require("moment");
 const ChatHistory = require('../models/chatHistory');
 
@@ -26,7 +25,7 @@ async function getHistoryJson(size) {
   }
 }
 
-async function getHistory(nickname, personality, channelId, numberOfEntries = 2) {
+async function getHistory(nickname, personality, channelId, numberOfEntries = 0) {
   if (!channelId) {
     console.error("getHistory called with undefined channelId");
     return "Error: channelId is undefined";

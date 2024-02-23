@@ -117,22 +117,25 @@ async function handleMessage(message) {
 
     // Trim persona name from response text if it exists.
     responseText = responseText.replace(
-      new RegExp(`${currentPersonality}: |\\(${currentPersonality}\\) `, "gi"),
+      new RegExp(`${currentPersonality.name}: |\\(${currentPersonality.name}\\) `, "gi"),
       ""
     );
 
-    // Chat History Use and Manipulation
-    // Add the latest user message to the chat history
-    buildHistory("user", nickname, message.content, nickname, channelId);
+    const MAX_MESSAGE_LENGTH = 2000;
+    if (responseText.length > MAX_MESSAGE_LENGTH) {
+      let messageChunks = splitIntoChunks(responseText, MAX_MESSAGE_LENGTH);
+      for (const chunk of messageChunks) {
+        await message.channel.send(chunk);
+      }
+    } else {
+      await message.channel.send(responseText);
+    }
 
-    // Add GPT Response to Chat History
-    buildHistory("assistant", currentPersonality.name, responseText, nickname, channelId);
-
-    // Print trimmed response to discord
-    return message.reply(responseText);
   } catch (err) {
-    console.log(err.message);
-    return message.reply("Unable to Generate Response");
+    console.error(err);
+
+    // If an error occurs, inform the user.
+    await message.reply("An error occurred while generating the response. Please try again.");
   }
 }
 
@@ -642,6 +645,25 @@ function start() {
 
   client.login(process.env.DISCORD_TOKEN);
 }
+
+/**
+ * Splits a string into chunks up to a specified max length.
+ * @param {string} str - The string to split.
+ * @param {number} maxLength - The maximum length of each chunk.
+ * @returns {string[]} An array of string chunks.
+ */
+function splitIntoChunks(str, maxLength) {
+  let chunks = [];
+  while (str.length > 0) {
+    let chunkSize = Math.min(str.length, maxLength);
+    let chunk = str.substring(0, chunkSize);
+    chunks.push(chunk);
+    // Ensure we move to the next piece of the string
+    str = str.substring(chunkSize);
+  }
+  return chunks;
+}
+
 
 module.exports = {
   start,
