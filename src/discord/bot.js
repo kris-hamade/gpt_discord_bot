@@ -28,10 +28,10 @@ async function handleMessage(message) {
   // Ignore messages from other bots
   if (message.author.bot) return;
 
-  // Skip mention check in DMs
+  // Skip if the bot is not mentioned or if other mentions are present
   if (
     !(message.channel instanceof Discord.DMChannel) &&
-    !message.mentions.has(client.user.id)
+    (!message.mentions.has(client.user.id) || message.mentions.everyone || message.mentions.roles.size > 0 || message.mentions.users.size > 1)
   )
     return;
 
@@ -73,9 +73,7 @@ async function handleMessage(message) {
   if (!currentPersonality) {
     console.error(`No personality found for name: ${userConfig.currentPersonality}`);
     return message.reply(`Sorry, I couldn't find the specified personality: ${userConfig.currentPersonality}`);
-  }
-
-  message.content = message.content.replace(/<@[!&]?\d+>/g, "").trim();
+  }  
 
   // Show as typing in the discord channel
   message.channel.sendTyping();
