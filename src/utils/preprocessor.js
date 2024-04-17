@@ -29,7 +29,7 @@ async function preprocessUserInput(input, nickname, channelId) {
   const userConfig = await getChatConfig(nickname, channelId);
 
   const relevantTags =
-    userConfig.model === "gpt-3" || userConfig.model === "gpt-3.5-turbo" || userConfig.model === "gpt-4-turbo-preview"
+    userConfig.model === "gpt-3" || userConfig.model === "gpt-3.5-turbo" || userConfig.model === "gpt-4-turbo"
       ? ["N", "NN", "NNS", "NNP", "NNPS"]
       : ["N", "NN", "NNS", "NNP", "NNPS", "JJ", "JJR", "JJS"];
 

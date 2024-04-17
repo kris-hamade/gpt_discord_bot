@@ -121,7 +121,7 @@ async function generateVulnerabilityReport(vulnerabilities) {
 
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4-turbo-preview",
+      model: "gpt-4-turbo",
       messages: messages,
       temperature: 0.6,
       max_tokens: 1000
@@ -156,7 +156,7 @@ async function generateWebhookReport(message) {
 
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4-turbo-preview",
+      model: "gpt-4-turbo",
       messages: messages,
       temperature: 0.6,
       max_tokens: 1000
@@ -260,7 +260,7 @@ async function generateEventData(prompt, channelId, client) {
     };
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4-turbo-preview",
+      model: "gpt-4-turbo",
       messages: [
         {
           role: "system",

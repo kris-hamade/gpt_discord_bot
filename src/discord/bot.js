@@ -413,7 +413,7 @@ function start() {
 
           if (userConfig) {
             // Retrieve model from user's config and validate it
-            const allowedModels = ["gpt-3.5-turbo", "gpt-3.5-turbo-1106", "gpt-4-turbo-preview"];
+            const allowedModels = ["gpt-3.5-turbo", "gpt-3.5-turbo-1106", "gpt-4-turbo"];
             if (allowedModels.includes(modelName)) {
               // Update the user's config with the new model
               userConfig.model = modelName;
