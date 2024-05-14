@@ -2,7 +2,7 @@
 // Instantiate moment.js for timestamping
 const moment = require('moment');
 // Sets the version of the bot
-const version = "1.7.2.0";
+const version = "1.7.3";
 // Sets Character limit in gpt.js and preprocessor.js
 let characterLimit = 96000 * 4;
 
@@ -10,7 +10,7 @@ let characterLimit = 96000 * 4;
 const startTime = moment();
 
 function getCharacterLimit(model) {
-    characterLimit = model === "gpt-4-turbo" ? 96000 * 4 : 96000 * 4;
+    characterLimit = model === "gpt-4o" ? 96000 * 4 : 96000 * 4;
     return characterLimit;
 }
 
