@@ -27,11 +27,11 @@ async function setChatConfig(username, config, channelID) {
     if (config.model) {
         if (config.model.includes("gpt-3")) {
             // If the model contains "gpt-3", update it to "gpt-3.5-turbo-1106"
-            chatConfig.model = "gpt-3.5-turbo-1106";
+            chatConfig.model = "gpt-3.5-turbo";
         } else if (config.model.includes("gpt-4")) {
             // If the model contains "gpt-4", update it to "gpt-4-turbo"
             // This will also catch any "gpt-4" models and update them to "gpt-4-turbo"
-            chatConfig.model = "gpt-4-turbo";
+            chatConfig.model = "gpt-4o";
         } else {
             // If the model is something else, set it directly
             chatConfig.model = config.model;
