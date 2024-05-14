@@ -74,6 +74,7 @@ async function generateResponse(
         },
       ],
       temperature: temperature,
+      max_tokens: 500
     });
 
     const message = response.choices[0].message.content;
