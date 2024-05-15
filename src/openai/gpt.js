@@ -44,6 +44,8 @@ async function generateResponse(
     const response = await openai.chat.completions.create({
       model: model,
       messages: [
+        { role: "system",
+        content: "Make sure your response is as concise as possible" },
         {
           role: "system",
           content: await personaBuilder(persona),
@@ -73,8 +75,7 @@ async function generateResponse(
           content: `${nickname} says: ${prompt}`,
         },
       ],
-      temperature: temperature,
-      max_tokens: 50
+      temperature: temperature
     });
 
     const message = response.choices[0].message.content;
