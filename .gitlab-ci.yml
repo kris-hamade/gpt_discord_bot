@@ -33,27 +33,26 @@ deploy_prod:
   image: bitnami/kubectl:latest
   script:
     - mkdir -p ~/.kube
-    - echo "
-      apiVersion: v1
+    - |
+      echo "apiVersion: v1
       kind: Config
       clusters:
       - cluster:
           certificate-authority-data: $K8S_CA_CERT
           server: https://k8s.hamy.app:6443
-        name: your-ci-context
+        name: hamk8s-cluster
       contexts:
       - context:
-          cluster: your-ci-context
+          cluster: hamk8s-cluster
           user: gitlab
-        name: your-ci-context
-      current-context: your-ci-context
+        name: hamk8s-cluster
+      current-context: hamk8s-cluster
       users:
       - name: gitlab
         user:
-          token: $AGENT_TOKEN
-      " > ~/.kube/config
-    - kubectl config set-context --current --namespace=your-namespace
-    - kubectl set image deployment/your-deployment your-container=$TAG_COMMIT
+          token: $AGENT_TOKEN" > ~/.kube/config
+    - kubectl config set-context --current --namespace=gpt-discord-bot
+    - kubectl set image deployment/gpt-discord-bot gpt-discord-bot=$TAG_COMMIT
   tags:
     - kubernetes
   rules:
@@ -66,27 +65,26 @@ deploy_dev:
   image: bitnami/kubectl:latest
   script:
     - mkdir -p ~/.kube
-    - echo "
-      apiVersion: v1
+    - |
+      echo "apiVersion: v1
       kind: Config
       clusters:
       - cluster:
           certificate-authority-data: $K8S_CA_CERT
           server: https://k8s.hamy.app:6443
-        name: your-ci-context
+        name: hamk8s-cluster
       contexts:
       - context:
-          cluster: your-ci-context
+          cluster: hamk8s-cluster
           user: gitlab
-        name: your-ci-context
-      current-context: your-ci-context
+        name: hamk8s-cluster
+      current-context: hamk8s-cluster
       users:
       - name: gitlab
         user:
-          token: $AGENT_TOKEN
-      " > ~/.kube/config
-    - kubectl config set-context --current --namespace=your-namespace
-    - kubectl set image deployment/your-deployment your-container=$TAG_COMMIT
+          token: $AGENT_TOKEN" > ~/.kube/config
+    - kubectl config set-context --current --namespace=gpt-discord-bot
+    - kubectl set image deployment/gpt-discord-bot gpt-discord-bot=$TAG_COMMIT
   tags:
     - kubernetes
   rules:
