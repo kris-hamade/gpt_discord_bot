@@ -1,21 +1,9 @@
-# .gitlab/agents/my-agent/config.yaml
-
 kubernetes:
-  context: khamade@hamk8s-cluster  # The context name from ~/.kube/config
-
-observability:
-  enabled: true  # Enables observability features
-
-ci_namespace: gitlab-ci  # Namespace for GitLab CI/CD jobs
-
-project_namespaces:
-  - production  # Namespace for production environment
-  - staging     # Namespace for staging environment
-  - development # Namespace for development environment
-
-gitlab:
-  endpoint: "https://gitlab.com"  # GitLab instance URL
-  token: "$YOUR_AGENT_TOKEN"  # Token for the GitLab Agent
-
-log:
-  level: info  # Log level
+  contexts:
+    - name: hamk8s-cluster
+      cluster:
+        server: https://k8s.hamy.app:6443
+        certificate-authority-data: ${K8S_CA_CERT}
+      user:
+        token: "${AGENT_TOKEN}"
+  namespace: discord-gpt-bot
