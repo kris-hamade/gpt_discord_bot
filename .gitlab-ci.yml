@@ -4,12 +4,9 @@ stages:
   - postman_tests
   - convert_postman_to_k6
   - load_test_k6
-
 variables:
   TAG_LATEST: $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:latest
   TAG_COMMIT: $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA
-  KUBECONFIG: /builds/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME/.kube/config
-
 publish:
   stage: publish
   image: docker:20.10
@@ -25,73 +22,46 @@ publish:
   rules:
     - if: '$CI_COMMIT_REF_NAME == "main"'
     - if: '$CI_COMMIT_REF_NAME == "dev_deploy"'
-
 deploy_prod:
   stage: deploy
   environment:
     name: main
-  image: bitnami/kubectl:latest
+  image: docker:20.10
+  services:
+    - docker:20.10-dind
+  before_script:
+    - apk add --no-cache curl
   script:
-    - mkdir -p ~/.kube
-    - |
-      echo "apiVersion: v1
-      kind: Config
-      clusters:
-      - cluster:
-          certificate-authority-data: $K8S_CA_CERT
-          server: https://k8s.hamy.app:6443
-        name: hamk8s-cluster
-      contexts:
-      - context:
-          cluster: hamk8s-cluster
-          user: gitlab
-        name: hamk8s-cluster
-      current-context: hamk8s-cluster
-      users:
-      - name: gitlab
-        user:
-          token: $AGENT_TOKEN" > ~/.kube/config
-    - export KUBECONFIG=~/.kube/config
-    - kubectl config set-context --current --namespace=gpt-discord-bot
-    - kubectl set image deployment/gpt-discord-bot gpt-discord-bot=$TAG_COMMIT
+    - chmod og= "$ID_RSA_CLOUD"
+    - apk update && apk add openssh-client
+    - ssh -i $ID_RSA_CLOUD -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY"
+    - ssh -i $ID_RSA_CLOUD -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker pull $TAG_COMMIT"
+    - ssh -i $ID_RSA_CLOUD -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker container rm -f $PROD_CONTAINER_NAME || true"
+    - ssh -i $ID_RSA_CLOUD -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker run -d -p $PROD_SERVER_PORT:$NODE_PORT --name $PROD_CONTAINER_NAME -e API_KEY=$API_KEY -e DISCORD_TOKEN=$DISCORD_TOKEN -e OPENAI_API_KEY=$OPENAI_API_KEY -e MONGODB_URI=$MONGODB_URI -e SENTRY_DSN=$SENTRY_DSN -e AZURE_VISION_ENDPOINT=$AZURE_VISION_ENDPOINT -e AZURE_VISION_KEY=$AZURE_VISION_KEY -e LEONARDO_AI_KEY=$LEONARDO_AI_KEY -e STABLE_DIFFUSION_KEY=$STABLE_DIFFUSION_KEY -e PORT=$NODE_PORT -v $CI_PROJECT_DIR/prod/data-misc:/src/utils/data-misc --restart=unless-stopped $TAG_COMMIT"
   tags:
-    - kubernetes
+    - cloud
   rules:
     - if: '$CI_COMMIT_REF_NAME == "main"'
-
 deploy_dev:
   stage: deploy
   environment:
     name: dev_deploy
-  image: bitnami/kubectl:latest
+  image: docker:20.10
+  services:
+    - docker:20.10-dind
+  before_script:
+    - apk add --no-cache curl
   script:
-    - mkdir -p ~/.kube
-    - |
-      echo "apiVersion: v1
-      kind: Config
-      clusters:
-      - cluster:
-          certificate-authority-data: $K8S_CA_CERT
-          server: https://k8s.hamy.app:6443
-        name: hamk8s-cluster
-      contexts:
-      - context:
-          cluster: hamk8s-cluster
-          user: gitlab
-        name: hamk8s-cluster
-      current-context: hamk8s-cluster
-      users:
-      - name: gitlab
-        user:
-          token: $AGENT_TOKEN" > ~/.kube/config
-    - export KUBECONFIG=~/.kube/config
-    - kubectl config set-context --current --namespace=gpt-discord-bot
-    - kubectl set image deployment/gpt-discord-bot gpt-discord-bot=$TAG_COMMIT
+    - chmod og= "$ID_RSA_CLOUD"
+    - apk update && apk add openssh-client
+    - ssh -i $ID_RSA_CLOUD -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY"
+    - ssh -i $ID_RSA_CLOUD -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker pull $TAG_COMMIT"
+    - ssh -i $ID_RSA_CLOUD -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker container rm -f $DEV_CONTAINER_NAME || true"
+    - ssh -i $ID_RSA_CLOUD -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker run -d -p $DEV_SERVER_PORT:3001 --name $DEV_CONTAINER_NAME -e API_KEY=$API_KEY -e DISCORD_TOKEN=$DEV_DISCORD_TOKEN -e OPENAI_API_KEY=$OPENAI_API_KEY -e MONGODB_URI=$MONGODB_URI -e SENTRY_DSN=$SENTRY_DSN -e AZURE_VISION_ENDPOINT=$AZURE_VISION_ENDPOINT -e AZURE_VISION_KEY=$AZURE_VISION_KEY -e LEONARDO_AI_KEY=$LEONARDO_AI_KEY -e STABLE_DIFFUSION_KEY=$STABLE_DIFFUSION_KEY -v $CI_PROJECT_DIR/dev/data-misc:/src/utils/data-misc --restart=unless-stopped $TAG_COMMIT"
   tags:
-    - kubernetes
+    - cloud
   rules:
     - if: '$CI_COMMIT_REF_NAME == "dev_deploy"'
-
 postman_tests_prod:
   stage: postman_tests
   environment:
@@ -105,7 +75,6 @@ postman_tests_prod:
     - gitlab-org-docker
   rules:
     - if: '$CI_COMMIT_REF_NAME == "main"'
-
 postman_tests_dev:
   stage: postman_tests
   environment:
@@ -119,7 +88,6 @@ postman_tests_dev:
     - gitlab-org-docker
   rules:
     - if: '$CI_COMMIT_REF_NAME == "dev_deploy"'
-
 convert_postman_to_k6_prod:
   stage: convert_postman_to_k6
   environment:
@@ -137,7 +105,6 @@ convert_postman_to_k6_prod:
     - gitlab-org-docker
   rules:
     - if: '$CI_COMMIT_REF_NAME == "main"'
-
 convert_postman_to_k6_dev:
   stage: convert_postman_to_k6
   environment:
@@ -156,7 +123,6 @@ convert_postman_to_k6_dev:
     - gitlab-org-docker
   rules:
     - if: '$CI_COMMIT_REF_NAME == "dev_deploy"'
-
 load_test_k6_prod:
   stage: load_test_k6
   environment:
@@ -172,7 +138,6 @@ load_test_k6_prod:
     - gitlab-org-docker
   rules:
     - if: '$CI_COMMIT_REF_NAME == "main"'
-
 load_test_k6_dev:
   stage: load_test_k6
   environment:
