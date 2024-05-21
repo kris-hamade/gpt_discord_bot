@@ -33,9 +33,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "haggle.hamy.cloud/api/status",
+					"raw": "haggle.hamy.app/api/status",
 					"host": [
-						"haggle.hamy.cloud"
+						"haggle.hamy.app"
 					],
 					"path": [
 						"api",
@@ -71,9 +71,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "haggle.hamy.cloud/api/chatHistory",
+					"raw": "haggle.hamy.app/api/chatHistory",
 					"host": [
-						"haggle.hamy.cloud"
+						"haggle.hamy.app"
 					],
 					"path": [
 						"api",
@@ -109,9 +109,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "haggle.hamy.cloud/api/currentJournal",
+					"raw": "haggle.hamy.app/api/currentJournal",
 					"host": [
-						"haggle.hamy.cloud"
+						"haggle.hamy.app"
 					],
 					"path": [
 						"api",
@@ -147,9 +147,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "haggle.hamy.cloud/api/currentHandouts",
+					"raw": "haggle.hamy.app/api/currentHandouts",
 					"host": [
-						"haggle.hamy.cloud"
+						"haggle.hamy.app"
 					],
 					"path": [
 						"api",
@@ -231,9 +231,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "https://haggle.hamy.cloud/api/config",
+					"raw": "https://haggle.hamy.app/api/config",
 					"host": [
-						"haggle.hamy.cloud"
+						"haggle.hamy.app"
 					],
 					"path": [
 						"api",
@@ -269,9 +269,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "haggle.hamy.cloud/api/uptime",
+					"raw": "haggle.hamy.app/api/uptime",
 					"host": [
-						"haggle.hamy.cloud"
+						"haggle.hamy.app"
 					],
 					"path": [
 						"api",
@@ -297,9 +297,9 @@
 					]
 				},
 				"url": {
-					"raw": "haggle.hamy.cloud/api/uploadRoll20Data/Handouts",
+					"raw": "haggle.hamy.app/api/uploadRoll20Data/Handouts",
 					"host": [
-						"haggle.hamy.cloud"
+						"haggle.hamy.app"
 					],
 					"path": [
 						"api",
@@ -326,9 +326,9 @@
 					]
 				},
 				"url": {
-					"raw": "haggle.hamy.cloud/api/uploadRoll20Data/Journal",
+					"raw": "haggle.hamy.app/api/uploadRoll20Data/Journal",
 					"host": [
-						"haggle.hamy.cloud"
+						"haggle.hamy.app"
 					],
 					"path": [
 						"api",
