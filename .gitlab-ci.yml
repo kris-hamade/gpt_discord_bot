@@ -30,16 +30,14 @@ deploy_prod:
   services:
     - docker:20.10-dind
   before_script:
-    - apk add --no-cache curl openssh-client
-    - mkdir -p ~/.ssh
-    - echo "$ID_RSA_CLOUD_BASE64" | base64 -d > ~/.ssh/id_rsa
-    - chmod 600 ~/.ssh/id_rsa
-    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+    - apk add --no-cache curl
   script:
-    - ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY"
-    - ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker pull $TAG_COMMIT"
-    - ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker container rm -f $PROD_CONTAINER_NAME || true"
-    - ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker run -d -p $PROD_SERVER_PORT:$NODE_PORT --name $PROD_CONTAINER_NAME -e API_KEY=$API_KEY -e DISCORD_TOKEN=$DISCORD_TOKEN -e OPENAI_API_KEY=$OPENAI_API_KEY -e MONGODB_URI=$MONGODB_URI -e SENTRY_DSN=$SENTRY_DSN -e AZURE_VISION_ENDPOINT=$AZURE_VISION_ENDPOINT -e AZURE_VISION_KEY=$AZURE_VISION_KEY -e LEONARDO_AI_KEY=$LEONARDO_AI_KEY -e STABLE_DIFFUSION_KEY=$STABLE_DIFFUSION_KEY -e PORT=$NODE_PORT -v $CI_PROJECT_DIR/prod/data-misc:/src/utils/data-misc --restart=unless-stopped $TAG_COMMIT"
+    - chmod og= "$ID_RSA_CLOUD"
+    - apk update && apk add openssh-client
+    - ssh -i $ID_RSA_CLOUD -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY"
+    - ssh -i $ID_RSA_CLOUD -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker pull $TAG_COMMIT"
+    - ssh -i $ID_RSA_CLOUD -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker container rm -f $PROD_CONTAINER_NAME || true"
+    - ssh -i $ID_RSA_CLOUD -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "docker run -d -p $PROD_SERVER_PORT:$NODE_PORT --name $PROD_CONTAINER_NAME -e API_KEY=$API_KEY -e DISCORD_TOKEN=$DISCORD_TOKEN -e OPENAI_API_KEY=$OPENAI_API_KEY -e MONGODB_URI=$MONGODB_URI -e SENTRY_DSN=$SENTRY_DSN -e AZURE_VISION_ENDPOINT=$AZURE_VISION_ENDPOINT -e AZURE_VISION_KEY=$AZURE_VISION_KEY -e LEONARDO_AI_KEY=$LEONARDO_AI_KEY -e STABLE_DIFFUSION_KEY=$STABLE_DIFFUSION_KEY -e PORT=$NODE_PORT -v $CI_PROJECT_DIR/prod/data-misc:/src/utils/data-misc --restart=unless-stopped $TAG_COMMIT"
   tags:
     - on-prem
   rules:
