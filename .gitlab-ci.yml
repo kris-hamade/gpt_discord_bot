@@ -93,7 +93,7 @@ postman_tests_dev:
   tags:
     - gitlab-org-docker
   rules:
-    - if: '$CI_COMMIT_REF_NAME == 'dev_deploy'"
+    - if: '$CI_COMMIT_REF_NAME == "dev_deploy"'
 
 convert_postman_to_k6_prod:
   stage: convert_postman_to_k6
